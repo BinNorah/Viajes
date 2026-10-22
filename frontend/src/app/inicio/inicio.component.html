@@ -1,0 +1,385 @@
+
+    <div class="landing-container">
+      <!-- 1. Hero Section con Buscador Rápido -->
+      <section class="hero-section">
+        <div class="hero-overlay"></div>
+        <div class="hero-inner">
+          <div class="hero-badge">
+            <span class="badge-pulse"></span>
+            <span>TRANSPORTE INTERPROVINCIAL CERTIFICADO MTC · SUTRAN</span>
+          </div>
+
+          <h1 class="hero-main-title">
+            Conectamos el Perú con<br>
+            <span class="gradient-text">seguridad, confort y puntualidad.</span>
+          </h1>
+
+          <p class="hero-subtitle">
+            Reserva tus pasajes en línea en segundos, escoge tu asiento exacto en tiempo real y viaja en la flota de buses más moderna del país.
+          </p>
+
+          <!-- Tarjeta de Búsqueda Rápida Directa -->
+          <div class="fast-search-card">
+            <div class="card-kicker-row">
+              <span class="kicker-label">BUSCADOR DIRECTO DE RUTAS</span>
+              <span class="kicker-tag">Salidas Diarias Garantizadas</span>
+            </div>
+
+            <form (ngSubmit)="buscarPasajes()" class="fast-search-grid">
+              <!-- Origen -->
+              <div class="search-field">
+                <label for="fast-origen">CIUDAD DE ORIGEN</label>
+                <div class="field-control">
+                  <span class="field-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                      <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                  </span>
+                  <select id="fast-origen" [(ngModel)]="origen" name="origen">
+                    <option value="">Selecciona origen...</option>
+                    @for (c of ciudades; track c) {
+                      <option [value]="c">{{ c }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+
+              <!-- Destino -->
+              <div class="search-field">
+                <label for="fast-destino">CIUDAD DE DESTINO</label>
+                <div class="field-control">
+                  <span class="field-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polygon points="12 8 8 12 12 16 12 8"></polygon>
+                    </svg>
+                  </span>
+                  <select id="fast-destino" [(ngModel)]="destino" name="destino">
+                    <option value="">Selecciona destino...</option>
+                    @for (c of ciudades; track c) {
+                      <option [value]="c" [disabled]="c === origen">{{ c }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+
+              <!-- Fecha -->
+              <div class="search-field">
+                <label for="fast-fecha">FECHA DE SALIDA</label>
+                <div class="field-control">
+                  <span class="field-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                      <line x1="16" y1="2" x2="16" y2="6"></line>
+                      <line x1="8" y1="2" x2="8" y2="6"></line>
+                      <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                  </span>
+                  <input id="fast-fecha" type="date" [(ngModel)]="fecha" [min]="fechaMinima" name="fecha">
+                </div>
+              </div>
+
+              <!-- Botón Submit -->
+              <div class="search-action">
+                <button type="submit" class="btn-fast-search">
+                  <span>Buscar Pasajes</span>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                  </svg>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Métricas de Confianza -->
+          <div class="stats-row">
+            <div class="stat-pill">
+              <b>+50,000</b>
+              <span>Pasajeros trasladados</span>
+            </div>
+            <div class="stat-separator"></div>
+            <div class="stat-pill">
+              <b>99.8%</b>
+              <span>Índice de puntualidad</span>
+            </div>
+            <div class="stat-separator"></div>
+            <div class="stat-pill">
+              <b>24/7</b>
+              <span>Monitoreo GPS SUTRAN</span>
+            </div>
+            <div class="stat-separator"></div>
+            <div class="stat-pill">
+              <b>100%</b>
+              <span>Emisión electrónica oficial</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Sección Destinos Populares -->
+      <section class="destinations-section">
+        <div class="section-heading">
+          <span class="sub-badge">RUTAS FRECUENTES</span>
+          <h2>Destinos Más Populares</h2>
+          <p>Conexiones directas todos los días con salidas programadas en horarios diurnos y nocturnos.</p>
+        </div>
+
+        <div class="destinations-grid">
+          @for (d of destinosPopulares; track d.origen + d.destino) {
+            <div class="destination-card">
+              <div class="dest-card-header">
+                <span class="dest-category">{{ d.categoria }}</span>
+                <span class="dest-frequency">{{ d.frecuencia }}</span>
+              </div>
+              
+              <div class="dest-route">
+                <h3>{{ d.origen }}</h3>
+                <span class="route-arrow">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                  </svg>
+                </span>
+                <h3>{{ d.destino }}</h3>
+              </div>
+
+              <p class="dest-desc">{{ d.descripcion }}</p>
+
+              <div class="dest-info-row">
+                <div class="info-item">
+                  <span class="info-label">Duración Aprox.</span>
+                  <b>{{ d.duracionAprox }}</b>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Tarifa desde</span>
+                  <b class="price-val">S/ {{ d.precioDesde }}.00</b>
+                </div>
+              </div>
+
+              <button type="button" class="btn-book-route" (click)="irARuta(d.origen, d.destino)">
+                <span>Reservar Pasaje</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            </div>
+          }
+        </div>
+      </section>
+
+      <!-- 3. Experiencia a Bordo & Servicios de Calidad -->
+      <section class="services-section">
+        <div class="section-heading">
+          <span class="sub-badge">CONFORT Y TECNOLOGÍA</span>
+          <h2>Nuestros Servicios de Primera Clase a Bordo</h2>
+          <p>Equipamiento diseñado para garantizar tu descanso en cada kilómetro del trayecto.</p>
+        </div>
+
+        <div class="services-grid">
+          <div class="service-card">
+            <div class="service-icon-box">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 9h-4V3H9v6H5l7 7 7-7z"></path>
+                <path d="M5 18v2h14v-2"></path>
+              </svg>
+            </div>
+            <h4>Asientos Ergonómicos Reclinables</h4>
+            <p>Configuraciones de 160° Sofá-Cama y 140° Semi-Cama con soporte lumbar y descansapiés acolchado.</p>
+          </div>
+
+          <div class="service-card">
+            <div class="service-icon-box">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+                <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
+                <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+                <line x1="12" y1="20" x2="12.01" y2="20"></line>
+              </svg>
+            </div>
+            <h4>WiFi Satelital y Conexión USB</h4>
+            <p>Acceso a internet a bordo y puertos USB independientes en cada butaca para mantener tus dispositivos con carga.</p>
+          </div>
+
+          <div class="service-card">
+            <div class="service-icon-box">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+              </svg>
+            </div>
+            <h4>Boleto Digital QR Inmediato</h4>
+            <p>Emisión electrónica al instante sin necesidad de imprimir. Valida tu acceso directamente desde tu celular.</p>
+          </div>
+
+          <div class="service-card">
+            <div class="service-icon-box">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+            </div>
+            <h4>Monitoreo SUTRAN en Tiempo Real</h4>
+            <p>Control de velocidad por satélite las 24 horas y relevo de choferes profesionales cada 4 horas de ruta.</p>
+          </div>
+
+          <div class="service-card">
+            <div class="service-icon-box">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+            </div>
+            <h4>Climatización Inteligente</h4>
+            <p>Aire acondicionado ecológico con renovación continua de aire y filtros antibacteriales en ambos pisos.</p>
+          </div>
+
+          <div class="service-card">
+            <div class="service-icon-box">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+              </svg>
+            </div>
+            <h4>Custodia Segura de Equipaje</h4>
+            <p>Registro con ticket codificado para tu maleta en bodega y seguro de equipaje durante todo el viaje.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Pasos para Comprar Tu Boleto -->
+      <section class="how-it-works-section">
+        <div class="section-heading">
+          <span class="sub-badge">PROCESO SENCILLO</span>
+          <h2>¿Cómo Reservar Tu Viaje en 3 Pasos?</h2>
+          <p>Tu pasaje listo en menos de 2 minutos desde cualquier dispositivo.</p>
+        </div>
+
+        <div class="steps-grid">
+          <div class="step-card">
+            <div class="step-number">01</div>
+            <h4>Busca tu Itinerario</h4>
+            <p>Selecciona tu ciudad de origen, destino y fecha. Compara precios, horarios de salida y categorías de servicio.</p>
+          </div>
+
+          <div class="step-card">
+            <div class="step-number">02</div>
+            <h4>Elige tu Asiento en Vivo</h4>
+            <p>Visualiza el croquis interactivo de 1er y 2do piso del bus. Escoge entre ventana, pasillo o filas panorámicas.</p>
+          </div>
+
+          <div class="step-card">
+            <div class="step-number">03</div>
+            <h4>Paga y Recibe tu Boleto</h4>
+            <p>Realiza tu pago seguro en línea y obtén tu boleto con código QR para abordar directamente en el terminal.</p>
+          </div>
+        </div>
+
+        <div class="steps-cta">
+          <a routerLink="/pasajes" class="btn-primary-action">
+            <span>Ir al Buscador de Pasajes</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </a>
+        </div>
+      </section>
+
+      <!-- 5. Preguntas Frecuentes -->
+      <section class="faq-section">
+        <div class="section-heading">
+          <span class="sub-badge">DUDAS Y CONSULTAS</span>
+          <h2>Preguntas Frecuentes</h2>
+          <p>Todo lo que necesitas saber antes de abordar tu viaje interprovincial.</p>
+        </div>
+
+        <div class="faq-container">
+          <div class="faq-item" [class.open]="faqOpen === 1" (click)="toggleFaq(1)">
+            <div class="faq-question">
+              <h4>¿Con cuánta anticipación debo presentarme en el terminal terrestre?</h4>
+              <span class="faq-arrow">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </span>
+            </div>
+            @if (faqOpen === 1) {
+              <div class="faq-answer">
+                <p>Se recomienda presentarse como mínimo <strong>30 minutos antes</strong> de la hora programada de salida para el registro de equipaje en bodega y la verificación de identidad con DNI o carné de extranjería.</p>
+              </div>
+            }
+          </div>
+
+          <div class="faq-item" [class.open]="faqOpen === 2" (click)="toggleFaq(2)">
+            <div class="faq-question">
+              <h4>¿Cuánto equipaje puedo llevar en el viaje?</h4>
+              <span class="faq-arrow">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </span>
+            </div>
+            @if (faqOpen === 2) {
+              <div class="faq-answer">
+                <p>Cada boleto incluye hasta <strong>20 kg de equipaje en bodega</strong> sin costo adicional, además de un equipaje de mano ligero (mochila o bolso personal) para llevar contigo en la cabina del bus.</p>
+              </div>
+            }
+          </div>
+
+          <div class="faq-item" [class.open]="faqOpen === 3" (click)="toggleFaq(3)">
+            <div class="faq-question">
+              <h4>¿Cuáles son los requisitos para viajar con menores de edad?</h4>
+              <span class="faq-arrow">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </span>
+            </div>
+            @if (faqOpen === 3) {
+              <div class="faq-answer">
+                <p>Los menores de edad deben viajar acompañados por al menos uno de sus padres con DNI vigente. En caso de viajar con un tutor o un tercero, es indispensable presentar un <strong>permiso notarial de viaje</strong> emitido conforme a las directivas del MTC.</p>
+              </div>
+            }
+          </div>
+
+          <div class="faq-item" [class.open]="faqOpen === 4" (click)="toggleFaq(4)">
+            <div class="faq-question">
+              <h4>¿Puedo cambiar la fecha de mi viaje o transferir mi boleto?</h4>
+              <span class="faq-arrow">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </span>
+            </div>
+            @if (faqOpen === 4) {
+              <div class="faq-answer">
+                <p>Sí, las postergaciones o transferencias se pueden solicitar hasta <strong>4 horas antes</strong> de la salida del bus dirigiéndote a las agencias oficiales o a través de la sección Mis Boletos en el sistema.</p>
+              </div>
+            }
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. Call to Action Final -->
+      <section class="final-cta-section">
+        <div class="final-cta-card">
+          <div class="cta-content">
+            <span class="cta-pill">VIAJA HOY MISMO</span>
+            <h2>¿Listo para planificar tu próximo viaje?</h2>
+            <p>Descubre horarios disponibles, asegura tu asiento preferido y disfruta del mejor servicio interprovincial del Perú.</p>
+          </div>
+          <div class="cta-action">
+            <a routerLink="/pasajes" class="btn-cta-large">
+              <span>Buscar Boletos Disponibles</span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </a>
+          </div>
+        </div>
+      </section>
+    </div>

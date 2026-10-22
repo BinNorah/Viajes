@@ -1,0 +1,134 @@
+
+    <section class="crud-container">
+      <header class="crud-header">
+        <div>
+          <span class="crud-kicker">GESTIÓN Y MANTENIMIENTO</span>
+          <h2 class="crud-title">{{ cfg.title }}</h2>
+          <p class="crud-subtitle">Administra los registros y actualiza la información en la base de datos.</p>
+        </div>
+        <span class="crud-counter-badge">{{ rows.length }} registros totales</span>
+      </header>
+
+      <!-- Form Card -->
+      <form class="crud-form-card" (ngSubmit)="guardar()">
+        <div class="form-card-title">
+          <span class="form-action-tag">{{ editId ? 'Modo Edición' : 'Nuevo Registro' }}</span>
+          @if (editId) {
+            <small class="editing-id">Editando ID #{{ editId }}</small>
+          }
+        </div>
+
+        <div class="crud-fields-grid">
+          @for (f of cfg.fields; track f.name) {
+            <div class="form-field">
+              <label>{{ etiqueta(f.labelText || f.name) }}</label>
+              @switch (f.type) {
+                @case ('sel') {
+                  <select [name]="f.name" [(ngModel)]="model[f.name]">
+                    @for (o of f.options; track o) {
+                      <option [ngValue]="o">{{ opcion(o) }}</option>
+                    }
+                  </select>
+                }
+                @case ('ref') {
+                  <select [name]="f.name" [(ngModel)]="model[f.name]">
+                    <option [ngValue]="null">Selecciona una opción…</option>
+                    @for (r of refsFor(f); track r.id) {
+                      <option [ngValue]="r.id">{{ f.label(r) }}</option>
+                    }
+                  </select>
+                }
+                @default {
+                  <input [name]="f.name" 
+                         [type]="f.type || 'text'" 
+                         [(ngModel)]="model[f.name]" 
+                         [placeholder]="'Ingresa ' + etiqueta(f.name).toLowerCase()">
+                }
+              }
+            </div>
+          }
+        </div>
+
+        <div class="crud-form-actions">
+          <button type="submit" class="btn-crud-save">
+            <span>{{ editId ? 'Guardar Cambios' : 'Crear Registro' }}</span>
+          </button>
+          <button type="button" class="btn-crud-clear" (click)="nuevo()">
+            Limpiar Formulario
+          </button>
+        </div>
+      </form>
+
+      <!-- Table Header & Search -->
+      <div class="table-toolbar">
+        <div>
+          <h3>Listado de Registros</h3>
+          <p>Consulta, filtra y edita elementos existentes en tiempo real.</p>
+        </div>
+        <div class="search-box">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input name="buscar" [(ngModel)]="busqueda" placeholder="Buscar en la tabla…">
+        </div>
+      </div>
+
+      <!-- Table -->
+      @if (filtradas.length) {
+        <div class="crud-table-wrap">
+          <table class="crud-table">
+            <thead>
+              <tr>
+                @for (c of cols; track c) {
+                  <th>{{ etiqueta(c) }}</th>
+                }
+                <th style="text-align: right;">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of filtradas; track r.id) {
+                <tr [class.row-editing]="editId === r.id">
+                  @for (c of cols; track c) {
+                    <td>
+                      @if (c === 'id') {
+                        <span class="id-tag">#{{ r[c] }}</span>
+                      } @else if (c === 'estado') {
+                        <span class="status-chip status-{{ String(r[c] || '').toLowerCase() }}">
+                          {{ opcion(r[c]) }}
+                        </span>
+                      } @else if (c === 'ocupacion_pct') {
+                        <b>{{ Math.round(r[c] || 0) }}%</b>
+                      } @else {
+                        {{ valor(r[c]) }}
+                      }
+                    </td>
+                  }
+                  <td style="text-align: right;">
+                    <div class="row-actions-group">
+                      <button type="button" class="btn-action btn-edit" (click)="editar(r)" title="Editar registro">
+                        Editar
+                      </button>
+                      <button type="button" class="btn-action btn-delete" (click)="borrar(r)" title="Eliminar registro">
+                        {{ cfg.del || 'Eliminar' }}
+                      </button>
+                      @for (a of cfg.acciones || []; track a.tipo) {
+                        <button type="button" class="btn-action btn-extra" (click)="accion.emit({tipo: a.tipo, row: r})">
+                          {{ a.label }}
+                        </button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="crud-empty-card">
+          <span class="empty-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          </span>
+          <b>{{ rows.length ? 'No hay coincidencias con la búsqueda' : 'Aún no hay registros en esta sección' }}</b>
+          <p>{{ rows.length ? 'Prueba con otro término de búsqueda.' : 'Crea el primer registro usando el formulario de arriba.' }}</p>
+        </div>
+      }
+    </section>
+  

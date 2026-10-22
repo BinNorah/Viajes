@@ -1,0 +1,145 @@
+
+    <section class="reservas-shell">
+      <header class="reservas-top-header">
+        <div>
+          <span class="kicker">CONTROL DE VENTAS Y PASAJEROS</span>
+          <h1 class="reservas-title">Gestión de Boletos y Reservas</h1>
+          <p class="reservas-desc">Seguimiento de compras en línea, ventas de taquilla física y estado de pagos.</p>
+        </div>
+        <button class="btn-refresh" (click)="actualizar()" [disabled]="cargando">
+          <span>{{ cargando ? 'Actualizando…' : '↻ Actualizar Datos' }}</span>
+        </button>
+      </header>
+
+      <!-- Stat Counters -->
+      <div class="stats-counters-grid">
+        <div class="counter-card" (click)="estado = 'TODOS'">
+          <span class="counter-label">Total Registros</span>
+          <b class="counter-val">{{ reservas.length }}</b>
+          <small>Boletos y bloqueos</small>
+        </div>
+        <div class="counter-card card-paid" (click)="estado = 'PAGADO'">
+          <span class="counter-label">Pagados / Confirmados</span>
+          <b class="counter-val">{{ pagados }}</b>
+          <small>Suma: S/ {{ totalPagado }}</small>
+        </div>
+        <div class="counter-card card-blocked" (click)="estado = 'BLOQUEADO'">
+          <span class="counter-label">Bloqueos Temporales</span>
+          <b class="counter-val">{{ pendientes }}</b>
+          <small>En proceso de compra</small>
+        </div>
+        <div class="counter-card card-canceled" (click)="estado = 'ANULADO'">
+          <span class="counter-label">Anulados / Expirados</span>
+          <b class="counter-val">{{ anulados }}</b>
+          <small>Asientos liberados</small>
+        </div>
+      </div>
+
+      <!-- Filters & Search Toolbar -->
+      <div class="toolbar-box">
+        <div class="search-input-group">
+          <span class="search-icon">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </span>
+          <input [(ngModel)]="busqueda" placeholder="Buscar por pasajero, DNI, código QR, ruta o vendedor…">
+        </div>
+
+        <div class="filter-group">
+          <label>Filtrar Estado:</label>
+          <select [(ngModel)]="estado">
+            <option value="TODOS">Todos los estados</option>
+            <option value="PAGADO">Pagados</option>
+            <option value="BLOQUEADO">Pendientes (Bloqueados)</option>
+            <option value="ANULADO">Anulados</option>
+          </select>
+        </div>
+
+        <span class="results-badge">{{ filtradas.length }} resultados</span>
+      </div>
+
+      <!-- Table of Bookings -->
+      @if (cargando) {
+        <div class="loading-state-box">
+          <div class="spinner"></div>
+          <p>Consultando registros de boletos…</p>
+        </div>
+      } @else if (filtradas.length) {
+        <div class="reservations-table-wrapper">
+          <table class="reservations-table">
+            <thead>
+              <tr>
+                <th>Boleto</th>
+                <th>Pasajero & Doc</th>
+                <th>Ruta & Itinerario</th>
+                <th>Asiento</th>
+                <th>Canal</th>
+                <th>Importe</th>
+                <th>Estado</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of filtradas; track r.id) {
+                <tr>
+                  <td>
+                    <span class="ticket-id-tag">#{{ r.id }}</span>
+                    <small class="qr-code-sub">{{ r.codigo_qr || 'Sin QR' }}</small>
+                  </td>
+                  <td>
+                    <b class="passenger-name">{{ r.nombres }} {{ r.apellidos }}</b>
+                    <small class="passenger-meta">{{ r.tipo_documento }}: {{ r.numero_documento }} · {{ r.telefono || 'Sin tlf' }}</small>
+                  </td>
+                  <td>
+                    <b class="route-info">{{ r.origen }} ⟶ {{ r.destino }}</b>
+                    <small class="route-meta">{{ r.fecha_salida }} · {{ r.hora_salida }} · Bus {{ r.placa }}</small>
+                  </td>
+                  <td>
+                    <span class="seat-badge">Asiento {{ r.numero_asiento }}</span>
+                    <small class="floor-sub">Piso {{ r.piso }}</small>
+                  </td>
+                  <td>
+                    <span class="channel-chip channel-{{ r.canal.toLowerCase() }}">{{ r.canal }}</span>
+                    <small class="vendor-sub">{{ r.vendedor }}</small>
+                  </td>
+                  <td>
+                    <b class="price-value">S/ {{ precio(r.precio_final) }}</b>
+                  </td>
+                  <td>
+                    <span class="status-chip status-{{ r.estado_pago.toLowerCase() }}">
+                      {{ estadoTexto(r.estado_pago) }}
+                    </span>
+                  </td>
+                  <td>
+                    <button type="button" class="btn-view-ticket" (click)="verBoleto(r)">
+                      Ver Boleto
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="empty-state-box">
+          <span class="empty-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+          </span>
+          <h3>No se encontraron boletos</h3>
+          <p>Prueba cambiando los términos de búsqueda o el filtro de estado.</p>
+        </div>
+      }
+
+      <!-- Modal to View Ticket -->
+      @if (boletoSeleccionado) {
+        <div class="ticket-modal-backdrop" (click)="boletoSeleccionado = null">
+          <div class="ticket-modal-card" (click)="$event.stopPropagation()">
+            <div class="modal-top">
+              <h3>Boleto Digital #{{ boletoSeleccionado.id }}</h3>
+              <button type="button" class="btn-close-modal" (click)="boletoSeleccionado = null">Cerrar</button>
+            </div>
+            <app-boleto [b]="boletoSeleccionado"></app-boleto>
+          </div>
+        </div>
+      }
+    </section>
+  

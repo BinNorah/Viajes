@@ -1,0 +1,15 @@
+{
+  "compileOnSave": false,
+<<<<<<< HEAD
+  "compilerOptions": { "rootDir": "./src", "outDir": "./dist/out-tsc", "strict": false, "skipLibCheck": true, "isolatedModules": true,
+    "esModuleInterop": true, "experimentalDecorators": true, "moduleResolution": "bundler", "importHelpers": true,
+    "target": "ES2022",
+    "module": "ES2022"
+  },
+=======
+  "compilerOptions": { "outDir": "./dist/out-tsc", "strict": false, "skipLibCheck": true, "isolatedModules": true,
+    "esModuleInterop": true, "experimentalDecorators": true, "moduleResolution": "bundler", "importHelpers": true,
+    "target": "ES2022", "module": "ES2022", "lib": ["ES2022", "dom"] },
+>>>>>>> 292f258bc7f547b31f9d482907d7d7304bb875b6
+  "angularCompilerOptions": { "strictTemplates": false }
+}

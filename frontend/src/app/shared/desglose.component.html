@@ -1,0 +1,31 @@
+
+    <div class="fare-card">
+      @if (asientos && asientos.length > 1) {
+        <div class="fare-header-multi">
+          <span class="fare-multi-title">Detalle de Pasajes ({{ asientos.length }} Asientos)</span>
+        </div>
+        @for (item of asientos; track item.id; let i = $index) {
+          <div class="fare-row">
+            <span>Pasajero {{ i + 1 }} · Asiento #{{ item.numero_asiento }} (Piso {{ item.piso }})</span>
+            <b>S/ {{ numero(item.precio_final || (item.precio_base + item.recargo_precio)) }}</b>
+          </div>
+        }
+      } @else if (a) {
+        <div class="fare-row">
+          <span>Tarifa Base de Ruta</span>
+          <b>S/ {{ numero(a?.precio_base) }}</b>
+        </div>
+        <div class="fare-row" [class.highlight]="a?.recargo_precio > 0">
+          <span>Recargo de Asiento ({{ a?.ubicacion || 'General' }})</span>
+          <b>+ S/ {{ numero(a?.recargo_precio) }}</b>
+        </div>
+      }
+      <div class="fare-total-row">
+        <div>
+          <span class="total-label">Total a Pagar</span>
+          <small>Incluye tasas e impuestos de terminal</small>
+        </div>
+        <b class="total-amount">S/ {{ totalCalculado() }}</b>
+      </div>
+    </div>
+  

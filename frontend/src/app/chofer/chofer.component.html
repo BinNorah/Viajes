@@ -1,0 +1,126 @@
+
+    <section class="chofer-shell">
+      <header class="chofer-header">
+        <div>
+          <div class="chofer-badge">
+            <span class="live-dot"></span>
+            <span>MÓDULO OPERATIVO DE RUTA</span>
+          </div>
+          <h1 class="chofer-title">Mi Itinerario de Conducción</h1>
+          <p class="chofer-desc">Consulta tus viajes asignados, estado de la unidad y lista oficial de pasajeros para el abordaje.</p>
+        </div>
+
+        @if (api.user(); as u) {
+          <div class="driver-profile-card">
+            <span class="driver-avatar">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>
+            </span>
+            <div>
+              <b>{{ u.nombre }}</b>
+              <small>Conductor Autorizado · DNI {{ u.dni }}</small>
+            </div>
+          </div>
+        }
+      </header>
+
+      <!-- Trips List -->
+      @if (cargando) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Consultando asignaciones de ruta…</p>
+        </div>
+      } @else if (v.length) {
+        <div class="driver-trips-grid">
+          @for (x of v; track x.id) {
+            <article class="driver-trip-card">
+              <div class="dt-top">
+                <div class="dt-time-badge">
+                  <span class="dt-time">{{ x.hora_salida }}</span>
+                  <small>{{ x.fecha_salida }}</small>
+                </div>
+                <span class="trip-status status-{{ x.estado.toLowerCase() }}">{{ x.estado }}</span>
+              </div>
+
+              <div class="dt-route">
+                <b>{{ x.origen }} ⟶ {{ x.destino }}</b>
+                <div class="dt-bus-meta">
+                  <span>Bus {{ x.placa }} ({{ x.tipo_servicio }})</span>
+                  <span>Distancia: {{ x.distancia_km }} km</span>
+                </div>
+              </div>
+
+              <div class="dt-passengers-bar">
+                <div class="pax-counter">
+                  <b>{{ x.ocupados }}</b>
+                  <small>pasajeros a bordo</small>
+                </div>
+                <div class="pax-actions">
+                  <button type="button" class="btn-pax-view" (click)="verPasajeros(x)">
+                    Ver Lista de Pasajeros
+                  </button>
+                  <a [href]="'/api/viajes/' + x.id + '/manifiesto'" class="btn-manifest-download">
+                    Descargar Manifiesto CSV
+                  </a>
+                </div>
+              </div>
+            </article>
+          }
+        </div>
+      } @else {
+        <div class="empty-driver-card">
+          <span class="empty-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="7" cy="18" r="1.5"></circle><circle cx="17" cy="18" r="1.5"></circle></svg>
+          </span>
+          <h3>No tienes viajes asignados en este momento</h3>
+          <p>Tu coordinador de flota te asignará itinerarios cuando se programen nuevas salidas.</p>
+        </div>
+      }
+
+      <!-- Passenger List Modal -->
+      @if (manifiestoModal) {
+        <div class="modal-backdrop" (click)="manifiestoModal = null">
+          <div class="modal-card" (click)="$event.stopPropagation()">
+            <div class="modal-head">
+              <div>
+                <span class="kicker">MANIFIESTO DE PASAJEROS</span>
+                <h3>Viaje #{{ manifiestoModal.viaje.id }} · {{ manifiestoModal.viaje.origen }} ⟶ {{ manifiestoModal.viaje.destino }}</h3>
+                <small>{{ manifiestoModal.viaje.fecha_salida }} {{ manifiestoModal.viaje.hora_salida }} · Bus {{ manifiestoModal.viaje.placa }}</small>
+              </div>
+              <button class="btn-close" (click)="manifiestoModal = null">Cerrar</button>
+            </div>
+
+            <div class="modal-content">
+              @if (manifiestoModal.pasajeros?.length) {
+                <table class="pax-table">
+                  <thead>
+                    <tr>
+                      <th>Asiento</th>
+                      <th>Pasajero</th>
+                      <th>Documento</th>
+                      <th>Teléfono</th>
+                      <th>Código QR</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (p of manifiestoModal.pasajeros; track p.codigo_qr) {
+                      <tr>
+                        <td><b class="seat-pill">Asiento {{ p.numero_asiento }} (Piso {{ p.piso }})</b></td>
+                        <td><b>{{ p.nombres }} {{ p.apellidos }}</b></td>
+                        <td>{{ p.tipo_documento }} {{ p.numero_documento }}</td>
+                        <td>{{ p.telefono || '—' }}</td>
+                        <td><span class="qr-pill">{{ p.codigo_qr }}</span></td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              } @else {
+                <div class="empty-pax-notice">
+                  Aún no hay pasajeros confirmados para esta salida.
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </section>
+  

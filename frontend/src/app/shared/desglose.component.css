@@ -1,0 +1,53 @@
+
+    .fare-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin: 14px 0;
+    }
+    .fare-header-multi {
+      padding-bottom: 8px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .fare-multi-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: 0.03em;
+    }
+    .fare-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #64748b;
+      padding: 4px 0;
+    }
+    .fare-row b { color: #1e293b; }
+    .fare-row.highlight { color: #d97706; }
+    .fare-row.highlight b { color: #b45309; }
+    .fare-total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed #cbd5e1;
+    }
+    .total-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .fare-total-row small {
+      font-size: 10px;
+      color: #94a3b8;
+    }
+    .total-amount {
+      font-size: 20px;
+      font-weight: 800;
+      color: #059669;
+    }
+  

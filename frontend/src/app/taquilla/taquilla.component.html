@@ -1,0 +1,211 @@
+
+    <section class="taquilla-shell">
+      <!-- POS Header -->
+      <header class="taquilla-header">
+        <div>
+          <div class="pos-badge">
+            <span class="live-dot"></span>
+            <span>MÓDULO DE VENTAS EN VENTANILLA (POS)</span>
+          </div>
+          <h1 class="pos-title">Terminal de Taquilla</h1>
+          <p class="pos-desc">Emisión presencial de pasajes, cobro en efectivo o tarjeta y reimpresión de comprobantes.</p>
+        </div>
+
+        @if (api.user(); as u) {
+          <div class="cashier-chip">
+            <span class="cashier-avatar">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+            </span>
+            <div>
+              <b>{{ u.nombre }}</b>
+              <small>Operador de Taquilla · Turno Activo</small>
+            </div>
+          </div>
+        }
+      </header>
+
+      <div class="taquilla-grid">
+        <!-- Left: Today's Trips -->
+        <div class="pos-panel">
+          <div class="panel-top">
+            <div>
+              <span class="kicker">PROGRAMACIÓN INMEDIATA</span>
+              <h2>Salidas Programadas de Hoy</h2>
+            </div>
+            <button type="button" class="btn-pos-refresh" (click)="cargarHoy()" [disabled]="cargando">
+              Refrescar
+            </button>
+          </div>
+
+          @if (viajes.length) {
+            <div class="trips-pos-list">
+              @for (v of viajes; track v.id) {
+                <div class="trip-pos-item" [class.is-selected]="viaje?.id === v.id">
+                  <div class="trip-pos-time">
+                    <span class="pos-time">{{ v.hora_salida }}</span>
+                    <small>Salida</small>
+                  </div>
+                  <div class="trip-pos-route">
+                    <b>{{ v.origen }} ⟶ {{ v.destino }}</b>
+                    <small>Bus {{ v.placa }} · {{ v.tipo_servicio }}</small>
+                  </div>
+                  <div class="trip-pos-seats">
+                    <span class="seats-count">{{ v.asientos_libres }}</span>
+                    <small>libres</small>
+                  </div>
+                  <div class="trip-pos-actions">
+                    <button type="button" class="btn-sell" (click)="elegir(v)">
+                      {{ viaje?.id === v.id ? 'Seleccionado' : 'Vender Pasaje' }}
+                    </button>
+                    <a [href]="'/api/viajes/' + v.id + '/manifiesto'" class="btn-manifest" title="Descargar Manifiesto CSV">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                    </a>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="empty-pos-card">
+              <span class="empty-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="7" cy="18" r="1.5"></circle><circle cx="17" cy="18" r="1.5"></circle></svg>
+              </span>
+              <p>No hay salidas programadas para el día de hoy.</p>
+            </div>
+          }
+        </div>
+
+        <!-- Right: Ticket Lookup & Management -->
+        <div class="pos-panel">
+          <div class="panel-top">
+            <div>
+              <span class="kicker">BÚSQUEDA RÁPIDA</span>
+              <h2>Consultar o Reimprimir Boleto</h2>
+            </div>
+          </div>
+
+          <form class="lookup-form" (ngSubmit)="buscarBol()">
+            <div class="lookup-input-wrap">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input [(ngModel)]="busca" name="busca" placeholder="Ingresa DNI, Pasaporte o código QR…">
+            </div>
+            <button type="submit" class="btn-lookup">Buscar</button>
+          </form>
+
+          <!-- Search Results -->
+          @if (res.length) {
+            <div class="lookup-results-list">
+              <div class="results-header">Se encontraron {{ res.length }} boletos:</div>
+              @for (b of res; track b.id) {
+                <div class="lookup-ticket-card">
+                  <div class="lt-meta">
+                    <b>Boleto #{{ b.id }} · Asiento {{ b.numero_asiento }}</b>
+                    <span>{{ b.nombres }} {{ b.apellidos }} ({{ b.numero_documento }})</span>
+                    <small>{{ b.origen }} ⟶ {{ b.destino }} · {{ b.fecha_salida }} {{ b.hora_salida }}</small>
+                  </div>
+                  <div class="lt-actions">
+                    <span class="status-tag tag-{{ b.estado_pago.toLowerCase() }}">{{ b.estado_pago }}</span>
+                    <button type="button" class="btn-sm" (click)="ver = b">Ver / Imprimir</button>
+                    @if (b.estado_pago === 'PAGADO') {
+                      <button type="button" class="btn-sm btn-void" (click)="anular(b)">Anular</button>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          } @else if (buscado) {
+            <div class="empty-lookup-hint">
+              No se encontraron boletos con ese documento o código.
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Live Seat Map & Checkout Modal for Counter Sale -->
+      @if (viaje) {
+        <section class="counter-sale-section" id="pos-asientos">
+          <div class="counter-sale-header">
+            <div>
+              <span class="kicker">VENTA PRESENCIAL EN VENTANILLA</span>
+              <h2>{{ viaje.origen }} ⟶ {{ viaje.destino }} ({{ viaje.hora_salida }})</h2>
+              <p>Bus {{ viaje.placa }} · {{ viaje.tipo_servicio }} · Tarifa base: S/ {{ viaje.precio_base }}</p>
+            </div>
+            <button class="btn-close-sale" (click)="viaje = null">Cerrar venta</button>
+          </div>
+
+          <div class="counter-sale-grid">
+            <!-- Seat selector -->
+            <div class="counter-map-card">
+              <app-mapa [viajeId]="viaje.id" (elegido)="asiento = $event"></app-mapa>
+            </div>
+
+            <!-- Cashier Passenger & Payment Form -->
+            <div class="counter-checkout-card">
+              @if (asiento) {
+                <div class="cashier-step-block">
+                  <h3>1. Asiento Seleccionado</h3>
+                  <app-desglose [a]="asiento"></app-desglose>
+
+                  <h3 style="margin-top:16px;">2. Datos del Pasajero</h3>
+                  <app-pasajero-form [p]="p"></app-pasajero-form>
+
+                  <h3 style="margin-top:16px;">3. Forma de Cobro</h3>
+                  <div class="payment-method-toggle">
+                    <button type="button" 
+                            class="method-btn" 
+                            [class.active]="metodo === 'EFECTIVO'"
+                            (click)="metodo = 'EFECTIVO'">
+                      Efectivo en Ventanilla
+                    </button>
+                    <button type="button" 
+                            class="method-btn" 
+                            [class.active]="metodo === 'TARJETA'"
+                            (click)="metodo = 'TARJETA'">
+                      Tarjeta / POS Físico
+                    </button>
+                  </div>
+
+                  @if (metodo === 'EFECTIVO') {
+                    <div class="cash-calc-box">
+                      <div class="calc-row">
+                        <label>Efectivo Recibido (S/):</label>
+                        <input type="number" step="1" [(ngModel)]="efectivoRecibido" placeholder="0.00">
+                      </div>
+                      <div class="change-due">
+                        <span>Vuelto a entregar:</span>
+                        <b>S/ {{ calcularVuelto() }}</b>
+                      </div>
+                    </div>
+                  }
+
+                  <button class="btn-confirm-pos-sale" (click)="vender()">
+                    <span>Registrar Venta (S/ {{ asiento.precio_final }})</span>
+                  </button>
+                </div>
+              } @else {
+                <div class="select-seat-prompt">
+                  <span class="prompt-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="2"></rect><circle cx="9" cy="9" r="1.5"></circle></svg>
+                  </span>
+                  <b>Selecciona un asiento libre en el mapa</b>
+                  <p>Haz clic sobre un asiento verde para iniciar la venta en ventanilla.</p>
+                </div>
+              }
+            </div>
+          </div>
+        </section>
+      }
+
+      <!-- Ticket Display Modal -->
+      @if (ver || boleto) {
+        <div class="pos-modal-overlay" (click)="ver = null; boleto = null">
+          <div class="pos-modal-card" (click)="$event.stopPropagation()">
+            <div class="modal-top">
+              <h3>Boleto Emitido #{{ (ver || boleto).id }}</h3>
+              <button type="button" class="btn-close-modal" (click)="ver = null; boleto = null">Cerrar</button>
+            </div>
+            <app-boleto [b]="ver || boleto"></app-boleto>
+          </div>
+        </div>
+      }
+    </section>
+  

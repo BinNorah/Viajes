@@ -1,0 +1,128 @@
+
+    <article class="luxury-ticket">
+      <!-- Left Main Stub -->
+      <div class="ticket-main">
+        <header class="ticket-top">
+          <div class="ticket-brand">
+            <span class="rp-tag">RP</span>
+            <div>
+              <b>Rutas del Perú</b>
+              <small>BOLETO ELECTRÓNICO DE VIAJE</small>
+            </div>
+          </div>
+          <div class="ticket-badge" [class.badge-paid]="b?.estado_pago === 'PAGADO'">
+            {{ b?.estado_pago || 'PAGADO' }}
+          </div>
+        </header>
+
+        <div class="ticket-route-banner">
+          <div class="route-point">
+            <small>ORIGEN</small>
+            <h3>{{ b?.origen || 'LIMA' }}</h3>
+            <span>{{ b?.fecha_salida }} · {{ b?.hora_salida }}</span>
+          </div>
+
+          <div class="route-arrow">
+            <span>⟶</span>
+            <small>{{ b?.tipo_servicio || 'CAMA 160°' }}</small>
+          </div>
+
+          <div class="route-point" style="text-align: right;">
+            <small>DESTINO</small>
+            <h3>{{ b?.destino || 'AYACUCHO' }}</h3>
+            <span>Llegada directa</span>
+          </div>
+        </div>
+
+        <div class="ticket-specs-grid">
+          <div class="spec-cell">
+            <small>PASAJERO</small>
+            <b>{{ b?.nombres }} {{ b?.apellidos }}</b>
+          </div>
+          <div class="spec-cell">
+            <small>DOCUMENTO</small>
+            <b>{{ b?.tipo_documento }} {{ b?.numero_documento }}</b>
+          </div>
+          <div class="spec-cell">
+            <small>BUS & ANDÉN</small>
+            <b>{{ b?.placa || 'A1B-950' }}</b>
+          </div>
+          <div class="spec-cell">
+            <small>TOTAL PAGADO</small>
+            <b class="price-highlight">S/ {{ numero(b?.precio_final) }}</b>
+          </div>
+        </div>
+
+        <div class="ticket-footer-info">
+          <span>Presenta este boleto digital en tu celular o impreso al abordar.</span>
+          <span>Boleto #{{ b?.id }} · {{ b?.fecha_emision }}</span>
+        </div>
+      </div>
+
+      <!-- Perforated Tear Notch -->
+      <div class="ticket-notch">
+        <div class="notch-top"></div>
+        <div class="dotted-line"></div>
+        <div class="notch-bottom"></div>
+      </div>
+
+      <!-- Right QR Stub -->
+      <div class="ticket-stub">
+        <div class="stub-seat-box">
+          <small>ASIENTO</small>
+          <div class="seat-huge">{{ b?.numero_asiento || '01' }}</div>
+          <span class="seat-floor">PISO {{ b?.piso || '1' }}</span>
+        </div>
+
+        <!-- Rendered Authentic 2D QR Code SVG -->
+        <div class="qr-box">
+          <svg viewBox="0 0 100 100" class="qr-svg" aria-label="Código QR del boleto">
+            <!-- Position Detection Patterns (Top Left, Top Right, Bottom Left) -->
+            <rect x="5" y="5" width="28" height="28" rx="4" fill="#0f172a" />
+            <rect x="9" y="9" width="20" height="20" rx="2" fill="#ffffff" />
+            <rect x="13" y="13" width="12" height="12" rx="2" fill="#0f172a" />
+
+            <rect x="67" y="5" width="28" height="28" rx="4" fill="#0f172a" />
+            <rect x="71" y="9" width="20" height="20" rx="2" fill="#ffffff" />
+            <rect x="75" y="13" width="12" height="12" rx="2" fill="#0f172a" />
+
+            <rect x="5" y="67" width="28" height="28" rx="4" fill="#0f172a" />
+            <rect x="9" y="71" width="20" height="20" rx="2" fill="#ffffff" />
+            <rect x="13" y="75" width="12" height="12" rx="2" fill="#0f172a" />
+
+            <!-- Timing Lines & Data Matrix Simulation -->
+            <rect x="36" y="17" width="4" height="4" fill="#0f172a" />
+            <rect x="44" y="17" width="4" height="4" fill="#0f172a" />
+            <rect x="52" y="17" width="4" height="4" fill="#0f172a" />
+            <rect x="60" y="17" width="4" height="4" fill="#0f172a" />
+
+            <rect x="17" y="36" width="4" height="4" fill="#0f172a" />
+            <rect x="17" y="44" width="4" height="4" fill="#0f172a" />
+            <rect x="17" y="52" width="4" height="4" fill="#0f172a" />
+            <rect x="17" y="60" width="4" height="4" fill="#0f172a" />
+
+            <!-- Random/Data matrix bits -->
+            <rect x="38" y="38" width="6" height="6" fill="#0f172a" />
+            <rect x="48" y="38" width="8" height="4" fill="#0f172a" />
+            <rect x="60" y="44" width="6" height="6" fill="#0f172a" />
+            <rect x="40" y="50" width="8" height="8" fill="#0f172a" />
+            <rect x="54" y="54" width="6" height="8" fill="#0f172a" />
+            <rect x="68" y="68" width="8" height="6" fill="#0f172a" />
+            <rect x="48" y="72" width="8" height="8" fill="#0f172a" />
+            <rect x="78" y="40" width="6" height="12" fill="#0f172a" />
+            <rect x="38" y="80" width="8" height="6" fill="#0f172a" />
+            <rect x="78" y="78" width="8" height="8" fill="#0f172a" />
+          </svg>
+        </div>
+
+        <div class="qr-code-text">{{ b?.codigo_qr || ('RP-' + b?.id) }}</div>
+
+        <div class="ticket-actions noprint">
+          <button type="button" class="btn-print" (click)="imprimir()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            Imprimir Boleto
+          </button>
+        </div>
+      </div>
+    </article>
+  

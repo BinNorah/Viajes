@@ -1,0 +1,160 @@
+
+    <section class="reports-shell">
+      <header class="reports-header-bar">
+        <div>
+          <span class="kicker">INTELIGENCIA DE NEGOCIO & REPORTES</span>
+          <h1 class="reports-title">Análisis Comercial y Operativo</h1>
+          <p class="reports-desc">Seguimiento de ingresos por ventas, participación de taquillas y porcentaje de ocupación de buses.</p>
+        </div>
+        <div class="header-actions">
+          <button type="button" class="btn-refresh" (click)="consultarTodo()" [disabled]="cargando">
+            <span>{{ cargando ? 'Actualizando datos…' : '↻ Actualizar Reportes' }}</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Sales Card -->
+      <section class="metric-panel sales-panel">
+        <div class="panel-top-row">
+          <div>
+            <span class="kicker">RENDIMIENTO FINANCIERO</span>
+            <h2>Ventas por Periodo</h2>
+            <p>Filtra las transacciones registradas entre fechas determinadas.</p>
+          </div>
+          <div class="currency-tag">Soles (PEN)</div>
+        </div>
+
+        <!-- Date Range Filter Form -->
+        <form class="date-filter-form" (ngSubmit)="ventas()">
+          <div class="filter-field">
+            <label>Fecha Desde:</label>
+            <input type="date" name="desde" [(ngModel)]="desde" required>
+          </div>
+          <div class="filter-field">
+            <label>Fecha Hasta:</label>
+            <input type="date" name="hasta" [(ngModel)]="hasta" required [min]="desde">
+          </div>
+          <div class="filter-buttons">
+            <button type="submit" class="btn-filter-submit" [disabled]="cargando">
+              <span>{{ cargando ? 'Consultando…' : 'Consultar Rango' }}</span>
+              <span>→</span>
+            </button>
+            <button type="button" class="btn-preset" (click)="setMesActual()">Este Mes</button>
+            <button type="button" class="btn-preset" (click)="setUltimos7Dias()">Últimos 7 días</button>
+          </div>
+        </form>
+
+        @if (rep) {
+          <div class="sales-results-grid">
+            <!-- Total Revenue Box -->
+            <div class="revenue-summary-box">
+              <span class="rev-label">INGRESOS DEL PERIODO</span>
+              <div class="rev-amount">S/ {{ dinero(rep.total?.total) }}</div>
+              <div class="rev-details">
+                <span class="detail-pill"><b>{{ rep.total?.boletos || 0 }}</b> boletos emitidos</span>
+                <span class="detail-pill">Ticket Promedio: <b>S/ {{ ticketPromedio() }}</b></span>
+              </div>
+            </div>
+
+            <!-- Sellers Breakdown -->
+            <div class="sellers-breakdown-box">
+              <div class="sellers-header">
+                <b>Ventas por Canal & Vendedor</b>
+                <small>{{ rep.por_taquillero?.length || 0 }} canales activos</small>
+              </div>
+
+              <div class="sellers-list">
+                @for (x of rep.por_taquillero; track x.taquillero) {
+                  <div class="seller-item">
+                    <div class="seller-meta">
+                      <b>{{ x.taquillero || 'Venta Web (Portal)' }}</b>
+                      <span>{{ x.boletos }} boletos · <b>S/ {{ dinero(x.total) }}</b></span>
+                    </div>
+                    <div class="meter-track">
+                      <div class="meter-fill" [style.width.%]="participacion(x.total)"></div>
+                    </div>
+                  </div>
+                } @empty {
+                  <div class="empty-inline-msg">
+                    <span>Sin ventas registradas en el periodo seleccionado.</span>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </section>
+
+      <!-- Fleet Occupancy Card -->
+      <section class="metric-panel occupancy-panel">
+        <div class="panel-top-row">
+          <div>
+            <span class="kicker">OPTIMIZACIÓN DE FLOTA</span>
+            <h2>Ocupación de Salidas Activas</h2>
+            <p>Control de asientos vendidos versus capacidad máxima por cada unidad programada.</p>
+          </div>
+          <div class="count-tag">{{ ocup.length }} viajes registrados</div>
+        </div>
+
+        @if (ocup.length) {
+          <div class="table-scroll-wrap">
+            <table class="report-table">
+              <thead>
+                <tr>
+                  <th>Viaje</th>
+                  <th>Itinerario / Ruta</th>
+                  <th>Fecha y Hora</th>
+                  <th>Unidad Bus</th>
+                  <th>Estado</th>
+                  <th style="min-width: 180px;">Ocupación</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (x of ocup; track x.id) {
+                  <tr>
+                    <td><span class="trip-id-tag">#{{ x.id }}</span></td>
+                    <td>
+                      <b class="route-name">{{ x.origen }} ⟶ {{ x.destino }}</b>
+                    </td>
+                    <td>
+                      <div>{{ fecha(x.fecha_salida) }}</div>
+                      <small class="time-sub">{{ x.hora_salida }} hrs</small>
+                    </td>
+                    <td>
+                      <span class="bus-tag">Bus {{ x.placa }}</span>
+                    </td>
+                    <td>
+                      <span class="state-chip state-{{ (x.estado || '').toLowerCase() }}">
+                        {{ x.estado }}
+                      </span>
+                    </td>
+                    <td>
+                      <div class="occupancy-progress-cell">
+                        <div class="occupancy-numbers">
+                          <b>{{ porcentaje(x.ocupacion_pct) }}%</b>
+                          <small>{{ x.ocupados }} / {{ x.asientos_total }} asientos</small>
+                        </div>
+                        <div class="occupancy-bar-track">
+                          <div class="occupancy-bar-fill" 
+                               [class.high-occupancy]="porcentaje(x.ocupacion_pct) > 75"
+                               [style.width.%]="porcentaje(x.ocupacion_pct)"></div>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <div class="report-empty-state">
+            <span class="empty-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+            </span>
+            <b>No hay salidas registradas</b>
+            <p>Cuando programes viajes en el panel de administración, la ocupación aparecerá aquí automáticamente.</p>
+          </div>
+        }
+      </section>
+    </section>
+  

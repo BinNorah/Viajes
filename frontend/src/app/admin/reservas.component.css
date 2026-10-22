@@ -1,0 +1,340 @@
+
+    .reservas-shell {
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 24px 0 60px;
+    }
+    .reservas-top-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 20px;
+      padding-bottom: 22px;
+      border-bottom: 1px solid #e2e8e4;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .kicker {
+      font-size: 9px;
+      font-weight: 800;
+      color: #059669;
+      letter-spacing: 0.1em;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .reservas-title {
+      font-size: 32px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.03em;
+      margin-bottom: 4px;
+    }
+    .reservas-desc {
+      font-size: 13px;
+      color: #64748b;
+    }
+    .btn-refresh {
+      padding: 9px 16px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #334155;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-refresh:hover { background: #f8fafc; border-color: #94a3b8; }
+
+    .stats-counters-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .counter-card {
+      padding: 18px 20px;
+      border-radius: 12px;
+      background: #ffffff;
+      border: 1px solid #e2e8e4;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .counter-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+    }
+    .counter-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .counter-val {
+      font-size: 28px;
+      font-weight: 800;
+      color: #0f172a;
+      display: block;
+      line-height: 1.1;
+      margin-bottom: 4px;
+    }
+    .counter-card small {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+    .card-paid .counter-val { color: #15803d; }
+    .card-blocked .counter-val { color: #b45309; }
+    .card-canceled .counter-val { color: #b91c1c; }
+
+    .toolbar-box {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: #ffffff;
+      padding: 14px 18px;
+      border: 1px solid #e2e8e4;
+      border-radius: 12px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+    .search-input-group {
+      flex: 1;
+      min-width: 260px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 0 12px;
+      height: 40px;
+    }
+    .search-input-group input {
+      border: none;
+      background: transparent;
+      outline: none;
+      width: 100%;
+      font-size: 13px;
+      color: #0f172a;
+    }
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .filter-group label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #475569;
+    }
+    .filter-group select {
+      height: 40px;
+      padding: 0 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 12px;
+      color: #0f172a;
+      background: #fff;
+    }
+    .results-badge {
+      font-size: 11px;
+      color: #64748b;
+      margin-left: auto;
+      font-weight: 600;
+    }
+
+    .reservations-table-wrapper {
+      background: #ffffff;
+      border: 1px solid #e2e8e4;
+      border-radius: 14px;
+      overflow-x: auto;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+    }
+    .reservations-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .reservations-table th {
+      background: #f8fafc;
+      padding: 12px 14px;
+      color: #64748b;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid #e2e8e4;
+      text-align: left;
+    }
+    .reservations-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: top;
+    }
+    .reservations-table tr:hover td {
+      background: #f8fafc;
+    }
+    .ticket-id-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: #0284c7;
+      background: #f0f9ff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+    .qr-code-sub {
+      display: block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: #94a3b8;
+      margin-top: 3px;
+    }
+    .passenger-name {
+      display: block;
+      color: #0f172a;
+      font-size: 13px;
+    }
+    .passenger-meta {
+      display: block;
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 2px;
+    }
+    .route-info {
+      display: block;
+      color: #0f172a;
+      font-size: 13px;
+    }
+    .route-meta {
+      display: block;
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 2px;
+    }
+    .seat-badge {
+      display: inline-block;
+      font-weight: 800;
+      font-size: 12px;
+      color: #0f766e;
+      background: #f0fdf4;
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+    .floor-sub {
+      display: block;
+      font-size: 10px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+    .channel-chip {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .channel-web { background: #e0f2fe; color: #0369a1; }
+    .channel-taquilla { background: #fef3c7; color: #b45309; }
+    .vendor-sub {
+      display: block;
+      font-size: 10px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+    .price-value {
+      font-size: 14px;
+      font-weight: 800;
+      color: #064e3b;
+    }
+    .status-chip {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 9999px;
+    }
+    .status-pagado { background: #dcfce7; color: #15803d; }
+    .status-bloqueado { background: #fef3c7; color: #b45309; }
+    .status-anulado { background: #fee2e2; color: #b91c1c; }
+
+    .btn-view-ticket {
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      background: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      color: #334155;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-view-ticket:hover {
+      background: #0f172a;
+      color: #fff;
+      border-color: #0f172a;
+    }
+
+    /* Modal Backdrop */
+    .ticket-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(6px);
+      z-index: 1000;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      animation: fadeIn 0.2s;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .ticket-modal-card {
+      width: 100%;
+      max-width: 760px;
+      background: #fff;
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .modal-top h3 {
+      font-size: 16px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+    .btn-close-modal {
+      background: none;
+      border: none;
+      font-size: 18px;
+      color: #94a3b8;
+      cursor: pointer;
+    }
+
+    .loading-state-box, .empty-state-box {
+      text-align: center;
+      padding: 48px;
+      background: #ffffff;
+      border-radius: 14px;
+      border: 1px solid #e2e8e4;
+      color: #64748b;
+    }
+    .spinner {
+      width: 28px;
+      height: 28px;
+      border: 3px solid #cbd5e1;
+      border-top-color: #10b981;
+      border-radius: 50%;
+      margin: 0 auto 12px;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  
