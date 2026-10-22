@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { roleGuard } from './guards';
+import { InicioComponent } from './inicio/inicio.component';
 import { BuscarComponent } from './pasajero/buscar.component';
 import { LoginComponent } from './pasajero/login.component';
 import { MisViajesComponent } from './pasajero/mis-viajes.component';
@@ -9,7 +10,7 @@ import { AdminComponent } from './admin/admin.component';
 import { ReportesComponent } from './admin/reportes.component';
 import { AdminReservasComponent } from './admin/reservas.component';
 export const routes: Routes = [
-  { path: '', component: BuscarComponent },
+  { path: '', component: InicioComponent },
   { path: 'pasajes', component: BuscarComponent },
   { path: 'login', component: LoginComponent },
   { path: 'mis-viajes', component: MisViajesComponent, canActivate: [roleGuard()] },

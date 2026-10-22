@@ -1,50 +1,740 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Api } from '../api.service';
+import { ToastService } from '../toast.service';
 
 type AccessMode = 'login' | 'registro';
 
 @Component({
-  selector: 'app-login', standalone: true, imports: [FormsModule, RouterLink],
+  selector: 'app-login',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterLink],
   template: `
-    <section class="auth-page">
-      <aside class="auth-showcase">
-        <a class="auth-brand" routerLink="/"><span class="auth-brand-mark">RP</span><span>Rutas del Perú<small>VIAJES INTERPROVINCIALES</small></span></a>
-        <div class="auth-copy"><span class="auth-kicker">TU VIAJE, A TU MANERA</span><h1>Siempre hay<br>un camino<br><em>por descubrir.</em></h1><p>Ingresa para consultar tus pasajes y tener tus viajes siempre a la mano.</p><div class="auth-route-art" aria-hidden="true"><span class="route-sun"></span><span class="route-hill hill-one"></span><span class="route-hill hill-two"></span><span class="route-path"></span><span class="route-pin pin-one">LIM</span><span class="route-pin pin-two">CUS</span></div></div>
-        <div class="auth-footnote"><span>●</span> Conectando destinos del Perú</div>
-      </aside>
-      <div class="auth-panel">
-        <a class="auth-back" routerLink="/">← Volver a buscar pasajes</a>
-        <div class="auth-card">
-          <div class="auth-tabs" role="tablist" aria-label="Acceso a la cuenta"><button type="button" role="tab" [attr.aria-selected]="modo === 'login'" [class.active]="modo === 'login'" (click)="cambiarModo('login')">Iniciar sesión</button><button type="button" role="tab" [attr.aria-selected]="modo === 'registro'" [class.active]="modo === 'registro'" (click)="cambiarModo('registro')">Crear cuenta</button></div>
-          @if (modo === 'login') {
-            <div class="auth-heading"><span class="auth-kicker">QUÉ BUENO TENERTE DE VUELTA</span><h2>Inicia sesión</h2><p>Ingresa tus datos para continuar.</p></div>
-            <form (ngSubmit)="entrar()" #loginForm="ngForm" class="auth-form">
-              <label for="login-correo">Correo electrónico</label><div class="auth-input"><span aria-hidden="true">✉</span><input id="login-correo" name="correo" type="email" [(ngModel)]="correo" placeholder="nombre@correo.com" autocomplete="username" required email></div>
-              <div class="password-label"><label for="login-password">Contraseña</label><button type="button" class="forgot-link" (click)="ayudaPassword()">¿Necesitas ayuda?</button></div><div class="auth-input"><span aria-hidden="true">▣</span><input id="login-password" name="password" [type]="verPassword ? 'text' : 'password'" [(ngModel)]="password" placeholder="Ingresa tu contraseña" autocomplete="current-password" required><button type="button" class="show-password" [attr.aria-label]="verPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'" (click)="verPassword = !verPassword">{{verPassword ? 'Ocultar' : 'Ver'}}</button></div>
-              <button class="auth-submit" type="submit" [disabled]="loginForm.invalid || ingresando"><span>{{ingresando ? 'Ingresando…' : 'Ingresar a mi cuenta'}}</span><span aria-hidden="true">→</span></button>
-            </form>
-            <p class="auth-switch">¿Aún no tienes cuenta? <button type="button" (click)="cambiarModo('registro')">Regístrate gratis</button></p>
-          } @else {
-            <div class="auth-heading"><span class="auth-kicker">EMPIEZA A VIAJAR</span><h2>Crea tu cuenta</h2><p>Regístrate como pasajero y consulta tus compras.</p></div>
-            <form (ngSubmit)="registrar()" #registroForm="ngForm" class="auth-form register-form">
-              <div class="form-two"><div><label for="registro-nombres">Nombres</label><div class="auth-input"><input id="registro-nombres" name="nombres" [(ngModel)]="r.nombres" placeholder="Tus nombres" autocomplete="given-name" required></div></div><div><label for="registro-apellidos">Apellidos</label><div class="auth-input"><input id="registro-apellidos" name="apellidos" [(ngModel)]="r.apellidos" placeholder="Tus apellidos" autocomplete="family-name" required></div></div></div>
-              <div><label for="registro-dni">DNI</label><div class="auth-input"><input id="registro-dni" name="dni" [(ngModel)]="r.dni" placeholder="8 dígitos" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" autocomplete="off" required></div></div>
-              <div><label for="registro-correo">Correo electrónico</label><div class="auth-input"><span aria-hidden="true">✉</span><input id="registro-correo" name="correo" type="email" [(ngModel)]="r.correo" placeholder="nombre@correo.com" autocomplete="email" required email></div></div>
-              <div class="form-two"><div><label for="registro-telefono">Teléfono <small>(opcional)</small></label><div class="auth-input"><input id="registro-telefono" name="telefono" type="tel" [(ngModel)]="r.telefono" placeholder="999 999 999" autocomplete="tel"></div></div><div><label for="registro-password">Contraseña</label><div class="auth-input"><input id="registro-password" name="password" [type]="verPassword ? 'text' : 'password'" [(ngModel)]="r.password" placeholder="Mínimo 6 caracteres" autocomplete="new-password" minlength="6" required></div></div></div>
-              <button class="auth-submit" type="submit" [disabled]="registroForm.invalid || registrando"><span>{{registrando ? 'Creando cuenta…' : 'Crear mi cuenta'}}</span><span aria-hidden="true">→</span></button>
-            </form>
-            <p class="auth-switch">¿Ya tienes cuenta? <button type="button" (click)="cambiarModo('login')">Inicia sesión</button></p>
-          }
-          <div class="auth-secure"><span aria-hidden="true">✓</span> Tus datos se usan para gestionar tu cuenta de pasajero.</div>
-        </div>
-        <p class="auth-legal">Al continuar aceptas las condiciones de uso del servicio.</p>
+    <div class="auth-wrapper">
+      <div class="auth-card">
+        <!-- Showcase Lateral -->
+        <aside class="auth-showcase">
+          <div class="showcase-content">
+            <a class="auth-brand" routerLink="/">
+              <span class="auth-brand-mark">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M8 6v6"></path><path d="M15 6v6"></path><path d="M2 12h19.6"></path><path d="M18 18h3s.5-1.7.8-2.8c.1-.4-.2-.8-.6-.9L2 12"></path><path d="M9 18h6"></path><circle cx="6" cy="18" r="2"></circle><circle cx="17" cy="18" r="2"></circle>
+                </svg>
+              </span>
+              <div>
+                <strong>Rutas del Perú</strong>
+                <small>TRANSPORTE INTERPROVINCIAL</small>
+              </div>
+            </a>
+
+            <div class="showcase-hero">
+              <span class="badge-pill">SISTEMA INTEGRAL DE VIAJES</span>
+              <h1>Tu destino comienza <em>aquí.</em></h1>
+              <p>Gestiona tus boletos, monitorea rutas en tiempo real o administra la flota completa desde un solo lugar.</p>
+            </div>
+
+            <!-- Features list -->
+            <div class="showcase-features">
+              <div class="feat-item">
+                <span class="feat-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                  </svg>
+                </span>
+                <div>
+                  <strong>Emisión Instantánea</strong>
+                  <small>Boletos electrónicos con código QR y validación digital</small>
+                </div>
+              </div>
+              <div class="feat-item">
+                <span class="feat-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                  </svg>
+                </span>
+                <div>
+                  <strong>Seguridad Garantizada</strong>
+                  <small>Bloqueo de asientos atómico y autenticación por roles</small>
+                </div>
+              </div>
+              <div class="feat-item">
+                <span class="feat-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                    <line x1="8" y1="2" x2="8" y2="18"></line>
+                    <line x1="16" y1="6" x2="16" y2="22"></line>
+                  </svg>
+                </span>
+                <div>
+                  <strong>Cobertura Nacional</strong>
+                  <small>Rutas conectadas entre Lima, Cusco, Huancayo y Ayacucho</small>
+                </div>
+              </div>
+            </div>
+
+            <div class="showcase-footer">
+              <span class="status-dot"></span>
+              <span>Plataforma certificada • Conexión cifrada TLS 1.3</span>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Form Panel -->
+        <main class="auth-main">
+          <div class="auth-header-nav">
+            <a class="back-link" routerLink="/">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+              Volver a buscar viajes
+            </a>
+          </div>
+
+          <div class="auth-box">
+            <!-- Selector Tabs -->
+            <div class="auth-tabs" role="tablist">
+              <button type="button" [class.active]="modo === 'login'" (click)="cambiarModo('login')">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+                Iniciar sesión
+              </button>
+              <button type="button" [class.active]="modo === 'registro'" (click)="cambiarModo('registro')">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+                Crear cuenta
+              </button>
+            </div>
+
+            @if (modo === 'login') {
+              <div class="tab-content">
+                <div class="heading-area">
+                  <h2>¡Bienvenido de nuevo!</h2>
+                  <p>Accede con tus credenciales según tu perfil.</p>
+                </div>
+
+                <!-- Quick Demo Buttons -->
+                <div class="quick-demo-box">
+                  <div class="quick-demo-title">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                    ACCESO RÁPIDO PARA DEMOSTRACIÓN:
+                  </div>
+                  <div class="demo-buttons-grid">
+                    <button type="button" class="btn-demo demo-admin" (click)="cargarDemo('admin')">
+                      <span class="role-icon">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+                      </span>
+                      <span class="role-name">Admin</span>
+                    </button>
+                    <button type="button" class="btn-demo demo-taquilla" (click)="cargarDemo('taquilla')">
+                      <span class="role-icon">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                      </span>
+                      <span class="role-name">Taquilla</span>
+                    </button>
+                    <button type="button" class="btn-demo demo-chofer" (click)="cargarDemo('chofer')">
+                      <span class="role-icon">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M7 16h10"></path><circle cx="7" cy="18" r="1.5"></circle><circle cx="17" cy="18" r="1.5"></circle></svg>
+                      </span>
+                      <span class="role-name">Chofer</span>
+                    </button>
+                    <button type="button" class="btn-demo demo-cliente" (click)="cargarDemo('cliente')">
+                      <span class="role-icon">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                      </span>
+                      <span class="role-name">Pasajero</span>
+                    </button>
+                  </div>
+                </div>
+
+                <form (ngSubmit)="entrar()" #loginForm="ngForm" class="form-grid">
+                  <div class="field-group">
+                    <label for="login-correo">Correo electrónico</label>
+                    <div class="input-with-icon">
+                      <span class="field-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                      </span>
+                      <input id="login-correo" name="correo" type="email" [(ngModel)]="correo" placeholder="ejemplo@rutas.pe" required email autocomplete="username">
+                    </div>
+                  </div>
+
+                  <div class="field-group">
+                    <div class="field-header">
+                      <label for="login-password">Contraseña</label>
+                      <button type="button" class="link-btn" (click)="ayudaPassword()">¿Olvidaste tu contraseña?</button>
+                    </div>
+                    <div class="input-with-icon">
+                      <span class="field-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                      </span>
+                      <input id="login-password" name="password" [type]="verPassword ? 'text' : 'password'" [(ngModel)]="password" placeholder="••••••••" required autocomplete="current-password">
+                      <button type="button" class="toggle-eye" (click)="verPassword = !verPassword" [title]="verPassword ? 'Ocultar' : 'Mostrar'">
+                        {{ verPassword ? 'Ocultar' : 'Ver' }}
+                      </button>
+                    </div>
+                  </div>
+
+                  <button class="btn-submit" type="submit" [disabled]="ingresando">
+                    @if (ingresando) {
+                      <span class="spinner"></span>
+                      <span>Verificando credenciales...</span>
+                    } @else {
+                      <span>Ingresar al Sistema</span>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                    }
+                  </button>
+                </form>
+
+                <div class="auth-footer-prompt">
+                  ¿Aún no tienes cuenta?
+                  <button type="button" class="link-highlight" (click)="cambiarModo('registro')">Regístrate gratis</button>
+                </div>
+              </div>
+            } @else {
+              <div class="tab-content">
+                <div class="heading-area">
+                  <h2>Crea tu cuenta</h2>
+                  <p>Regístrate como pasajero para consultar y gestionar tus compras.</p>
+                </div>
+
+                <form (ngSubmit)="registrar()" #registroForm="ngForm" class="form-grid">
+                  <div class="row-2">
+                    <div class="field-group">
+                      <label for="reg-nombres">Nombres</label>
+                      <input id="reg-nombres" name="nombres" [(ngModel)]="r.nombres" placeholder="Ej. Juan" required>
+                    </div>
+                    <div class="field-group">
+                      <label for="reg-apellidos">Apellidos</label>
+                      <input id="reg-apellidos" name="apellidos" [(ngModel)]="r.apellidos" placeholder="Ej. Pérez" required>
+                    </div>
+                  </div>
+
+                  <div class="row-2">
+                    <div class="field-group">
+                      <label for="reg-dni">DNI / Documento</label>
+                      <input id="reg-dni" name="dni" [(ngModel)]="r.dni" placeholder="8 dígitos" maxlength="8" pattern="[0-9]{8}" required>
+                    </div>
+                    <div class="field-group">
+                      <label for="reg-tel">Teléfono</label>
+                      <input id="reg-tel" name="telefono" type="tel" [(ngModel)]="r.telefono" placeholder="987654321">
+                    </div>
+                  </div>
+
+                  <div class="field-group">
+                    <label for="reg-correo">Correo electrónico</label>
+                    <div class="input-with-icon">
+                      <span class="field-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                      </span>
+                      <input id="reg-correo" name="correo" type="email" [(ngModel)]="r.correo" placeholder="nombre@correo.com" required email autocomplete="email">
+                    </div>
+                  </div>
+
+                  <div class="field-group">
+                    <label for="reg-pass">Contraseña</label>
+                    <div class="input-with-icon">
+                      <span class="field-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                      </span>
+                      <input id="reg-pass" name="password" [type]="verPassword ? 'text' : 'password'" [(ngModel)]="r.password" placeholder="Mínimo 6 caracteres" minlength="6" required autocomplete="new-password">
+                      <button type="button" class="toggle-eye" (click)="verPassword = !verPassword">
+                        {{ verPassword ? 'Ocultar' : 'Ver' }}
+                      </button>
+                    </div>
+                  </div>
+
+                  <button class="btn-submit" type="submit" [disabled]="registrando">
+                    @if (registrando) {
+                      <span class="spinner"></span>
+                      <span>Registrando cuenta...</span>
+                    } @else {
+                      <span>Crear mi Cuenta de Pasajero</span>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                    }
+                  </button>
+                </form>
+
+                <div class="auth-footer-prompt">
+                  ¿Ya tienes una cuenta?
+                  <button type="button" class="link-highlight" (click)="cambiarModo('login')">Inicia sesión</button>
+                </div>
+              </div>
+            }
+
+            <div class="auth-trust-badge">
+              <span class="lock-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              </span>
+              <span>Tus datos personales están protegidos por la Ley N° 29733 de Protección de Datos Personales.</span>
+            </div>
+          </div>
+        </main>
       </div>
-    </section>
+    </div>
   `,
   styles: [`
-    :host{display:block}.auth-page{display:grid;grid-template-columns:minmax(300px,.9fr) minmax(430px,1.1fr);max-width:1050px;min-height:610px;margin:38px auto 0;border:1px solid #e5ebe5;border-radius:20px;background:#fff;overflow:hidden;box-shadow:0 20px 55px #19392913}.auth-showcase{position:relative;display:flex;flex-direction:column;justify-content:space-between;min-height:610px;padding:32px;background:linear-gradient(145deg,#153d36,#28614e 65%,#507858);color:#fff;overflow:hidden}.auth-showcase:before{content:'';position:absolute;inset:0;background-image:radial-gradient(#e0efc0 1px,transparent 1px);background-size:20px 20px;opacity:.13;mask-image:linear-gradient(140deg,#000,transparent 75%)}.auth-brand,.auth-brand-mark,.auth-footnote,.auth-copy{position:relative;z-index:1}.auth-brand{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;font:800 14px Manrope,sans-serif}.auth-brand-mark{display:grid;place-items:center;width:39px;height:39px;border-radius:12px;background:#d9ed93;color:#254936;font-size:12px}.auth-brand small{display:block;margin-top:3px;color:#bdd1bf;font:700 8px 'DM Sans',sans-serif;letter-spacing:.14em}.auth-copy{margin:auto 0 110px}.auth-kicker{color:#77947d;font-size:9px;font-weight:800;letter-spacing:.15em}.auth-showcase .auth-kicker{color:#d7e9af}.auth-copy h1{margin:15px 0 12px;color:#fff;font:800 clamp(35px,4vw,49px)/1.06 Manrope,sans-serif;letter-spacing:-.065em}.auth-copy h1 em{color:#d6ec91;font-style:normal}.auth-copy p{max-width:290px;color:#d4e1d5;font-size:12px;line-height:1.7}.auth-route-art{position:absolute;left:4px;right:-20px;bottom:-103px;height:225px;overflow:hidden;opacity:.9}.route-sun{position:absolute;right:20%;top:8px;width:75px;height:75px;border-radius:50%;background:#edc36e}.route-hill{position:absolute;bottom:0;width:0;height:0;border-left:150px solid transparent;border-right:150px solid transparent}.hill-one{left:0;border-bottom:155px solid #62856b}.hill-two{right:-10px;border-bottom:125px solid #99ad78}.route-path{position:absolute;left:48%;bottom:-8px;width:110px;height:110px;border:13px solid #f3e9cd;border-bottom:0;border-radius:60% 60% 0 0;transform:rotate(-28deg)}.route-pin{position:absolute;padding:4px 7px;border-radius:5px;background:#fff;color:#315742;font:800 8px Manrope,sans-serif}.pin-one{left:29%;top:79px}.pin-two{right:20%;top:46px}.auth-footnote{color:#d6e2d5;font-size:9px;letter-spacing:.04em}.auth-footnote span{margin-right:7px;color:#d5ed83}.auth-panel{display:flex;flex-direction:column;justify-content:center;padding:38px clamp(25px,5vw,66px)}.auth-back{align-self:flex-start;margin-bottom:26px;color:#70817a;font-size:10px;font-weight:700;text-decoration:none}.auth-back:hover{color:#245945}.auth-card{width:100%;max-width:410px;margin:0 auto}.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:9px;background:#f3f6f1}.auth-tabs button{height:35px;border:0;border-radius:7px;background:transparent;color:#7b8982;font-size:10px;font-weight:700;cursor:pointer}.auth-tabs button.active{background:#fff;color:#244f3c;box-shadow:0 2px 8px #18382a12}.auth-heading{margin:25px 0 20px}.auth-heading h2{margin:7px 0 6px;color:#1b3129;font:800 29px Manrope,sans-serif;letter-spacing:-.055em}.auth-heading p{margin:0;color:#839087;font-size:11px}.auth-form{display:grid;gap:9px}.auth-form label{display:block;margin:5px 0 6px;color:#4b5f53;font-size:10px;font-weight:700}.auth-form label small{color:#9ba69f;font-weight:400}.auth-input{height:43px;display:flex;align-items:center;gap:9px;padding:0 11px;border:1px solid #dfe7df;border-radius:8px;background:#fcfdfb}.auth-input:focus-within{border-color:#7da487;box-shadow:0 0 0 3px #61916b19}.auth-input>span{color:#73907c;font-size:13px}.auth-input input{width:100%;min-width:0;height:100%;padding:0;border:0;outline:0!important;background:transparent;color:#273b31;font-size:11px}.auth-input input::placeholder{color:#a7b1aa}.password-label{display:flex;align-items:center;justify-content:space-between}.password-label label{margin-bottom:6px}.forgot-link{padding:4px 0;border:0;background:none;color:#547c64;font-size:9px;cursor:pointer}.show-password{padding:5px;border:0;background:transparent;color:#527760;font-size:9px;font-weight:700;cursor:pointer}.auth-submit{height:44px;display:flex;align-items:center;justify-content:space-between;margin-top:9px;padding:0 15px;border:0;border-radius:8px;background:#194e43;color:#fff;font-size:11px;font-weight:800;cursor:pointer;transition:background .16s,transform .16s}.auth-submit:hover{background:#286c56;transform:translateY(-1px)}.auth-submit:disabled{opacity:.55;cursor:not-allowed;transform:none}.auth-switch{margin:18px 0;color:#87938c;text-align:center;font-size:10px}.auth-switch button{padding:0;border:0;background:transparent;color:#2f7454;font-size:10px;font-weight:800;cursor:pointer}.auth-secure{display:flex;align-items:center;gap:7px;margin-top:20px;padding-top:14px;border-top:1px solid #edf1ec;color:#88948d;font-size:9px}.auth-secure span{display:grid;place-items:center;width:16px;height:16px;border-radius:50%;background:#e9f3e7;color:#4d875b;font-weight:800}.auth-legal{margin:18px 0 0;color:#a0aaa3;text-align:center;font-size:9px}.register-form{gap:6px}.form-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.form-two>div{min-width:0}.register-form .auth-submit{margin-top:13px}@media(max-width:850px){.auth-page{grid-template-columns:minmax(240px,.8fr) minmax(360px,1.2fr);min-height:570px}.auth-showcase{min-height:570px;padding:25px}.auth-panel{padding:30px 25px}.auth-copy h1{font-size:38px}}@media(max-width:650px){.auth-page{grid-template-columns:1fr;max-width:480px;margin:18px auto 0;border-radius:15px}.auth-showcase{min-height:205px;padding:20px 22px}.auth-copy{margin:20px 0 0}.auth-copy h1{margin:10px 0 5px;font-size:31px}.auth-copy p,.auth-route-art,.auth-footnote{display:none}.auth-panel{padding:21px 20px 25px}.auth-back{margin-bottom:14px}.auth-heading{margin:18px 0 15px}.auth-heading h2{font-size:26px}.auth-secure{margin-top:14px}.auth-legal{margin-top:13px}}
+    :host {
+      display: block;
+      --primary: #059669;
+      --primary-dark: #064e3b;
+      --primary-hover: #10b981;
+      --primary-light: #ecfdf5;
+      --gold: #f59e0b;
+      --gold-dark: #d97706;
+      --border-color: #cbd5e1;
+      --bg-card: #ffffff;
+      --bg-hover: #f1f5f9;
+      --text-color: #0f172a;
+      --text-muted: #64748b;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-2xl: 20px;
+    }
+    .auth-wrapper {
+      min-height: calc(100vh - 120px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 30px 16px;
+    }
+    .auth-card {
+      width: 100%;
+      max-width: 1060px;
+      display: grid;
+      grid-template-columns: 460px 1fr;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-2xl);
+      box-shadow: 0 25px 60px -15px rgba(0,0,0,0.12);
+      overflow: hidden;
+      min-height: 640px;
+    }
+
+    /* Showcase Lateral */
+    .auth-showcase {
+      background: linear-gradient(145deg, #0f231c 0%, #174233 60%, #205c45 100%);
+      color: #fff;
+      padding: 44px 38px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+    .auth-showcase::after {
+      content: '';
+      position: absolute;
+      top: -30%;
+      right: -30%;
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(235, 179, 56, 0.22) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .showcase-content {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      justify-content: space-between;
+      gap: 32px;
+    }
+
+    .auth-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #fff;
+      text-decoration: none;
+    }
+    .auth-brand-mark {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--gold), #d99b1c);
+      color: #174233;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 8px 18px rgba(235,179,56,0.3);
+    }
+    .auth-brand strong {
+      display: block;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+    .auth-brand small {
+      display: block;
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      color: #a4cdbb;
+      font-weight: 700;
+    }
+
+    .showcase-hero {
+      margin-top: 10px;
+    }
+    .badge-pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(235, 179, 56, 0.2);
+      color: #ffd874;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      margin-bottom: 14px;
+      border: 1px solid rgba(235, 179, 56, 0.35);
+    }
+    .showcase-hero h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 34px;
+      line-height: 1.15;
+      font-weight: 800;
+      margin: 0 0 14px;
+      letter-spacing: -0.02em;
+    }
+    .showcase-hero h1 em {
+      color: #f7ca5d;
+      font-style: normal;
+    }
+    .showcase-hero p {
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: #c9ded5;
+      margin: 0;
+    }
+
+    .showcase-features {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .feat-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .feat-icon {
+      font-size: 18px;
+      line-height: 1;
+      padding-top: 2px;
+    }
+    .feat-item strong {
+      display: block;
+      font-size: 13px;
+      color: #fff;
+      font-weight: 700;
+    }
+    .feat-item small {
+      display: block;
+      font-size: 11.5px;
+      color: #a0c2b3;
+      line-height: 1.35;
+    }
+
+    .showcase-footer {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: #8fb8a5;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+
+    /* Main Form Panel */
+    .auth-main {
+      padding: 38px 46px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .auth-header-nav {
+      margin-bottom: 20px;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 12.5px;
+      font-weight: 600;
+      transition: color 0.15s;
+    }
+    .back-link:hover {
+      color: var(--primary);
+    }
+
+    .auth-box {
+      max-width: 440px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .auth-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      padding: 5px;
+      background: var(--bg-hover);
+      border-radius: var(--radius-lg);
+      margin-bottom: 24px;
+    }
+    .auth-tabs button {
+      border: 0;
+      background: transparent;
+      padding: 9px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.18s;
+    }
+    .auth-tabs button.active {
+      background: var(--bg-card);
+      color: var(--primary);
+      box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+    }
+
+    .heading-area {
+      margin-bottom: 20px;
+    }
+    .heading-area h2 {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text-color);
+      margin: 0 0 6px;
+      letter-spacing: -0.02em;
+    }
+    .heading-area p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin: 0;
+    }
+
+    /* Demo Box */
+    .quick-demo-box {
+      background: #f8faf8;
+      border: 1px dashed var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 12px 14px;
+      margin-bottom: 20px;
+    }
+    .quick-demo-title {
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 8px;
+    }
+    .demo-buttons-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+    .btn-demo {
+      border: 1px solid var(--border-color);
+      background: #fff;
+      border-radius: 8px;
+      padding: 6px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-demo:hover {
+      border-color: var(--primary);
+      background: var(--primary-light);
+      transform: translateY(-1px);
+    }
+    .role-icon { font-size: 15px; }
+    .role-name { font-size: 10.5px; font-weight: 700; color: var(--text-color); }
+
+    .form-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .field-group label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-color);
+    }
+    .field-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .link-btn {
+      background: none;
+      border: 0;
+      padding: 0;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--primary);
+      cursor: pointer;
+    }
+    .link-btn:hover { text-decoration: underline; }
+
+    .input-with-icon {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .field-icon {
+      position: absolute;
+      left: 12px;
+      color: var(--text-muted);
+      font-size: 14px;
+      pointer-events: none;
+    }
+    .input-with-icon input, .field-group input {
+      width: 100%;
+      height: 42px;
+      border: 1.5px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 0 12px;
+      font-size: 13.5px;
+      background: #fff;
+      color: var(--text-color);
+      transition: all 0.15s;
+      outline: none;
+    }
+    .input-with-icon input {
+      padding-left: 36px;
+      padding-right: 36px;
+    }
+    .input-with-icon input:focus, .field-group input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(27,77,58,0.12);
+    }
+    .toggle-eye {
+      position: absolute;
+      right: 10px;
+      border: 0;
+      background: none;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 4px;
+    }
+
+    .btn-submit {
+      margin-top: 12px;
+      height: 48px;
+      border: 0;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, #059669 0%, #047857 50%, #064e3b 100%);
+      color: #ffffff !important;
+      font-size: 14.5px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 10px 24px -2px rgba(5, 150, 105, 0.42), 0 4px 10px rgba(0, 0, 0, 0.08);
+      position: relative;
+    }
+    .btn-submit:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 30px -2px rgba(16, 185, 129, 0.52);
+      background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
+    }
+    .btn-submit:active:not(:disabled) {
+      transform: translateY(0);
+      box-shadow: 0 6px 14px rgba(5, 150, 105, 0.35);
+    }
+    .btn-submit:disabled {
+      background: linear-gradient(135deg, #047857, #064e3b) !important;
+      color: #ffffff !important;
+      opacity: 0.8;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: 0 4px 12px rgba(6, 78, 59, 0.25) !important;
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .auth-footer-prompt {
+      text-align: center;
+      margin-top: 18px;
+      font-size: 12.5px;
+      color: var(--text-muted);
+    }
+    .link-highlight {
+      background: none;
+      border: 0;
+      padding: 0;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--primary);
+      cursor: pointer;
+      margin-left: 4px;
+    }
+    .link-highlight:hover { text-decoration: underline; }
+
+    .auth-trust-badge {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-top: 22px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border-color);
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+    .lock-icon { font-size: 12px; }
+
+    @media (max-width: 900px) {
+      .auth-card {
+        grid-template-columns: 1fr;
+        max-width: 500px;
+      }
+      .auth-showcase {
+        display: none;
+      }
+      .auth-main {
+        padding: 30px 24px;
+      }
+    }
   `]
 })
 export class LoginComponent {
@@ -56,29 +746,103 @@ export class LoginComponent {
   ingresando = false;
   registrando = false;
 
-  constructor(private api: Api, private router: Router) {}
+  constructor(
+    private api: Api,
+    private router: Router,
+    private toast: ToastService
+  ) {}
 
-  cambiarModo(modo: AccessMode): void { this.modo = modo; this.verPassword = false; }
+  cambiarModo(modo: AccessMode): void {
+    this.modo = modo;
+    this.verPassword = false;
+  }
+
+  cargarDemo(tipo: 'admin' | 'taquilla' | 'chofer' | 'cliente'): void {
+    this.modo = 'login';
+    if (tipo === 'admin') {
+      this.correo = 'admin@rutas.pe';
+      this.password = 'admin123';
+      this.toast.info('Credenciales de Administrador cargadas.', 'Modo Demo');
+    } else if (tipo === 'taquilla') {
+      this.correo = 'taquilla@rutas.pe';
+      this.password = 'taquilla123';
+      this.toast.info('Credenciales de Taquilla cargadas.', 'Modo Demo');
+    } else if (tipo === 'chofer') {
+      this.correo = 'Angelh3@gmail.com';
+      this.password = 'chofer123';
+      this.toast.info('Credenciales de Conductor cargadas.', 'Modo Demo');
+    } else if (tipo === 'cliente') {
+      this.correo = 'luis77@gmail.com';
+      this.password = 'cliente123';
+      this.toast.info('Credenciales de Pasajero cargadas.', 'Modo Demo');
+    }
+  }
+
   destino(usuario: any): string {
-    const destinos: Record<string, string> = { ADMIN: '/admin', TAQUILLERO: '/taquilla', CHOFER: '/chofer', CLIENTE: '/' };
+    const destinos: Record<string, string> = {
+      ADMIN: '/admin',
+      TAQUILLERO: '/taquilla',
+      CHOFER: '/chofer',
+      CLIENTE: '/'
+    };
     return destinos[usuario.rol] || '/';
   }
-  ayudaPassword(): void { window.alert('Si olvidaste tu contraseña, comunícate con la empresa para restablecer el acceso.'); }
+
+  ayudaPassword(): void {
+    this.toast.info('Para restablecer tu contraseña, envía un correo a soporte@rutas.pe o comunícate con la administración.', 'Recuperación de Contraseña');
+  }
+
   entrar(): void {
     if (this.ingresando) return;
+    if (!this.correo?.trim() || !this.password) {
+      this.toast.error('Por favor, ingresa tu correo electrónico y contraseña.', 'Campos Requeridos');
+      return;
+    }
     this.ingresando = true;
     this.api.login(this.correo.trim(), this.password).subscribe({
-      next: usuario => { this.ingresando = false; this.router.navigateByUrl(this.destino(usuario)); },
-      error: () => { this.ingresando = false; }
+      next: usuario => {
+        this.ingresando = false;
+        this.toast.success(`¡Bienvenido de vuelta, ${usuario.nombres}!`, 'Sesión Iniciada');
+        this.router.navigateByUrl(this.destino(usuario));
+      },
+      error: (err) => {
+        this.ingresando = false;
+        const msg = err?.error?.error || 'Credenciales no válidas. Por favor verifica tus datos.';
+        this.toast.error(msg, 'Error de Autenticación');
+      }
     });
   }
+
   registrar(): void {
     if (this.registrando) return;
+    if (!this.r.nombres?.trim() || !this.r.apellidos?.trim() || !this.r.dni?.trim() || !this.r.correo?.trim() || !this.r.password) {
+      this.toast.error('Por favor, completa todos los campos requeridos para continuar.', 'Formulario Incompleto');
+      return;
+    }
+    if (this.r.dni.trim().length !== 8) {
+      this.toast.error('El DNI debe contener exactamente 8 dígitos numéricos.', 'DNI Inválido');
+      return;
+    }
     this.registrando = true;
-    const datos = { ...this.r, dni: this.r.dni.trim(), nombres: this.r.nombres.trim(), apellidos: this.r.apellidos.trim(), correo: this.r.correo.trim() };
+    const datos = {
+      ...this.r,
+      dni: this.r.dni.trim(),
+      nombres: this.r.nombres.trim(),
+      apellidos: this.r.apellidos.trim(),
+      correo: this.r.correo.trim()
+    };
     this.api.registro(datos).subscribe({
-      next: () => { this.registrando = false; this.router.navigateByUrl('/'); },
-      error: () => { this.registrando = false; }
+      next: () => {
+        this.registrando = false;
+        this.toast.success('Tu cuenta fue creada con éxito. ¡Bienvenido a Rutas del Perú!', 'Cuenta Creada');
+        this.router.navigateByUrl('/');
+      },
+      error: (err) => {
+        this.registrando = false;
+        const msg = err?.error?.error || 'No se pudo completar el registro.';
+        this.toast.error(msg, 'Error al Registrar');
+      }
     });
   }
 }
+

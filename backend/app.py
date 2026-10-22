@@ -10,6 +10,8 @@ from functools import wraps
 from flask import Flask, Response, g, jsonify, request, session
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from dashboard import render_backend_dashboard, get_system_stats
+
 
 # ==========================================================
 # CONFIGURACIÓN
@@ -355,9 +357,32 @@ def liberar_vencidos():
 
 
 @app.get('/')
+@app.get('/dashboard')
 def index():
+    accept = request.headers.get('Accept', '')
+    if 'text/html' in accept or request.args.get('dashboard') == '1':
+        return render_backend_dashboard(DB, db())
     return jsonify(
-        msg='API Viajes Interprovinciales activa'
+        status='online',
+        msg='API Viajes Interprovinciales activa',
+        version='2.0.0',
+        dashboard_url='/dashboard',
+        timestamp=now()
+    )
+
+
+@app.get('/api/health')
+def health():
+    stats = get_system_stats(DB, db())
+    return jsonify(stats)
+
+
+@app.post('/api/admin/clean-locks')
+def api_clean_locks():
+    liberar_vencidos()
+    return jsonify(
+        ok=True,
+        mensaje='Bloqueos de asientos vencidos liberados correctamente.'
     )
 
 
@@ -936,44 +961,68 @@ def reserva_propia(boleto_id):
 @need('CLIENTE')
 def reservar():
     datos = request.get_json(silent=True) or {}
+    asientos_ids = datos.get('asientos_ids')
 
-    temporal = run(
-        """
-        INSERT INTO pasajeros (
-            tipo_documento,
-            numero_documento,
-            nombres,
-            apellidos
-        )
-        VALUES ('DNI', ?, ?, ?)
-        """,
-        (
-            'TMP-' + uuid.uuid4().hex[:12],
-            'PENDIENTE',
-            'PENDIENTE'
-        )
-    )
+    if not asientos_ids:
+        if datos.get('asiento_id'):
+            asientos_ids = [datos.get('asiento_id')]
+        else:
+            return err('Debes seleccionar al menos un asiento', 400)
+
+    if len(asientos_ids) > 6:
+        return err('El límite máximo por compra es de 6 asientos', 400)
+
+    viaje_id = datos.get('viaje_id')
+    if not viaje_id:
+        return err('ID de viaje requerido', 400)
+
+    boletos_ids = []
+    temporales = []
 
     try:
-        boleto_id = crear_boleto(
-            datos.get('viaje_id'),
-            datos.get('asiento_id'),
-            temporal
-        )
+        for aid in asientos_ids:
+            temporal = run(
+                """
+                INSERT INTO pasajeros (
+                    tipo_documento,
+                    numero_documento,
+                    nombres,
+                    apellidos
+                )
+                VALUES ('DNI', ?, ?, ?)
+                """,
+                (
+                    'TMP-' + uuid.uuid4().hex[:12],
+                    'PENDIENTE',
+                    'PENDIENTE'
+                )
+            )
+            temporales.append(temporal)
+            boleto_id = crear_boleto(viaje_id, aid, temporal)
+            boletos_ids.append(boleto_id)
 
     except ValueError as error:
-        run(
-            'DELETE FROM pasajeros WHERE id = ?',
-            (temporal,)
-        )
-
+        for bid in boletos_ids:
+            run('DELETE FROM boletos_reservas WHERE id = ?', (bid,))
+        for tid in temporales:
+            run('DELETE FROM pasajeros WHERE id = ?', (tid,))
         return err(str(error), 409)
 
     session['mis_reservas'] = (
-        session.get('mis_reservas', []) + [boleto_id]
+        session.get('mis_reservas', []) + boletos_ids
     )
 
-    return jsonify(boleto_full(boleto_id))
+    detalles = [boleto_full(bid) for bid in boletos_ids]
+
+    if datos.get('asientos_ids') and isinstance(datos.get('asientos_ids'), list):
+        return jsonify({
+            'reserva': detalles[0],
+            'reservas': detalles,
+            'total': sum(float(b['precio_final']) for b in detalles),
+            'cantidad': len(detalles)
+        })
+
+    return jsonify(detalles[0])
 
 
 @app.put('/api/reservas/<int:bid>/pasajero')
@@ -1107,6 +1156,84 @@ def reserva_cancelar(bid):
         """,
         (bid,)
     )
+
+    return jsonify(ok=True)
+
+
+@app.post('/api/reservas/checkout')
+@need('CLIENTE')
+def reserva_checkout():
+    datos = request.get_json(silent=True) or {}
+    boletos_items = datos.get('boletos') or []
+
+    if not boletos_items:
+        return err('No se enviaron boletos para procesar el pago', 400)
+
+    # Validar tarjeta simulada
+    tarjeta = ''.join(c for c in str(datos.get('tarjeta', '')) if c.isdigit())
+    cvv = str(datos.get('cvv') or '')
+
+    if not 13 <= len(tarjeta) <= 19:
+        return err('Número de tarjeta bancaria inválido')
+
+    if not cvv.isdigit() or len(cvv) not in (3, 4):
+        return err('Código CVV inválido')
+
+    if tarjeta.endswith('0000'):
+        return err('Pago rechazado por la pasarela bancaria simulada', 402)
+
+    boletos_pagados = []
+
+    try:
+        for item in boletos_items:
+            bid = item.get('id')
+            boleto, error = reserva_propia(bid)
+            if error is not None:
+                return error
+
+            if boleto['estado_pago'] != 'BLOQUEADO':
+                return err(f"El asiento {boleto.get('numero_asiento', bid)} expiró o ya no está disponible", 409)
+
+            pasajero_id = upsert_pasajero({
+                'tipo_documento': item.get('tipo_documento', 'DNI'),
+                'numero_documento': item.get('numero_documento', ''),
+                'nombres': item.get('nombres', ''),
+                'apellidos': item.get('apellidos', ''),
+                'telefono': item.get('telefono', ''),
+                'correo': item.get('correo', '')
+            })
+
+            anterior = q("SELECT pasajero_id FROM boletos_reservas WHERE id = ?", (bid,), one=True)['pasajero_id']
+            run("UPDATE boletos_reservas SET pasajero_id = ? WHERE id = ?", (pasajero_id, bid))
+            if anterior != pasajero_id:
+                run("DELETE FROM pasajeros WHERE id = ? AND numero_documento LIKE 'TMP-%'", (anterior,))
+
+            if not emitir_qr(bid):
+                return err(f"No se pudo emitir el boleto {bid}", 409)
+
+            boletos_pagados.append(boleto_full(bid))
+
+    except ValueError as error:
+        return err(str(error), 409)
+
+    return jsonify({
+        'mensaje': 'Compra de pasajes completada con éxito',
+        'boletos': boletos_pagados,
+        'total': sum(float(b['precio_final']) for b in boletos_pagados),
+        'cantidad': len(boletos_pagados)
+    })
+
+
+@app.post('/api/reservas/cancelar-lote')
+@need('CLIENTE')
+def reservas_cancelar_lote():
+    datos = request.get_json(silent=True) or {}
+    bids = datos.get('boletos_ids') or []
+
+    for bid in bids:
+        boleto, error = reserva_propia(bid)
+        if error is None and boleto['estado_pago'] == 'BLOQUEADO':
+            run("UPDATE boletos_reservas SET estado_pago = 'ANULADO' WHERE id = ? AND estado_pago = 'BLOQUEADO'", (bid,))
 
     return jsonify(ok=True)
 

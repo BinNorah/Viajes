@@ -1,37 +1,588 @@
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 import { Api } from '../api.service';
+
 @Component({
-  selector: 'app-reportes', standalone: true, imports: [FormsModule],
+  selector: 'app-reportes',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
   template: `
-    <section class="reports-page">
-      <header class="reports-heading"><div><span class="report-kicker">ANÁLISIS DEL NEGOCIO</span><h1>Reportes</h1><p>Revisa los ingresos y la ocupación de las salidas.</p></div><button type="button" class="report-refresh" (click)="consultarTodo()" [disabled]="cargando">{{cargando ? 'Actualizando…' : '↻ Actualizar'}}</button></header>
-      <section class="report-card sales-card"><div class="report-card-heading"><div><span class="report-kicker">RENDIMIENTO COMERCIAL</span><h2>Ventas por periodo</h2><p>Filtra los boletos vendidos entre dos fechas.</p></div><span class="report-symbol">S/</span></div>
-        <form class="date-filter" (ngSubmit)="ventas()"><label>Desde<input type="date" name="desde" [(ngModel)]="desde" required></label><label>Hasta<input type="date" name="hasta" [(ngModel)]="hasta" required [min]="desde"></label><button type="submit" class="report-primary" [disabled]="cargando">{{cargando ? 'Consultando…' : 'Consultar ventas'}}<span>→</span></button></form>
-        @if (rep) {<div class="sales-total"><div><span>INGRESOS DEL PERIODO</span><b>S/ {{dinero(rep.total?.total)}}</b><small>{{rep.total?.boletos || 0}} boletos vendidos</small></div><div class="sales-bars"><div class="sales-bar-label"><span>Participación por vendedor</span><small>{{rep.por_taquillero?.length || 0}} vendedores</small></div>@for (x of rep.por_taquillero; track x.taquillero) {<div class="seller-row"><div><b>{{x.taquillero || 'Sin asignar'}}</b><span>{{x.boletos}} boletos · S/ {{dinero(x.total)}}</span></div><span class="seller-meter"><i [style.width.%]="participacion(x.total)"></i></span></div>} @empty {<p class="report-empty-inline">No hay ventas registradas en este periodo.</p>}</div></div>}
+    <section class="reports-shell">
+      <header class="reports-header-bar">
+        <div>
+          <span class="kicker">INTELIGENCIA DE NEGOCIO & REPORTES</span>
+          <h1 class="reports-title">Análisis Comercial y Operativo</h1>
+          <p class="reports-desc">Seguimiento de ingresos por ventas, participación de taquillas y porcentaje de ocupación de buses.</p>
+        </div>
+        <div class="header-actions">
+          <button type="button" class="btn-refresh" (click)="consultarTodo()" [disabled]="cargando">
+            <span>{{ cargando ? 'Actualizando datos…' : '↻ Actualizar Reportes' }}</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Sales Card -->
+      <section class="metric-panel sales-panel">
+        <div class="panel-top-row">
+          <div>
+            <span class="kicker">RENDIMIENTO FINANCIERO</span>
+            <h2>Ventas por Periodo</h2>
+            <p>Filtra las transacciones registradas entre fechas determinadas.</p>
+          </div>
+          <div class="currency-tag">Soles (PEN)</div>
+        </div>
+
+        <!-- Date Range Filter Form -->
+        <form class="date-filter-form" (ngSubmit)="ventas()">
+          <div class="filter-field">
+            <label>Fecha Desde:</label>
+            <input type="date" name="desde" [(ngModel)]="desde" required>
+          </div>
+          <div class="filter-field">
+            <label>Fecha Hasta:</label>
+            <input type="date" name="hasta" [(ngModel)]="hasta" required [min]="desde">
+          </div>
+          <div class="filter-buttons">
+            <button type="submit" class="btn-filter-submit" [disabled]="cargando">
+              <span>{{ cargando ? 'Consultando…' : 'Consultar Rango' }}</span>
+              <span>→</span>
+            </button>
+            <button type="button" class="btn-preset" (click)="setMesActual()">Este Mes</button>
+            <button type="button" class="btn-preset" (click)="setUltimos7Dias()">Últimos 7 días</button>
+          </div>
+        </form>
+
+        @if (rep) {
+          <div class="sales-results-grid">
+            <!-- Total Revenue Box -->
+            <div class="revenue-summary-box">
+              <span class="rev-label">INGRESOS DEL PERIODO</span>
+              <div class="rev-amount">S/ {{ dinero(rep.total?.total) }}</div>
+              <div class="rev-details">
+                <span class="detail-pill"><b>{{ rep.total?.boletos || 0 }}</b> boletos emitidos</span>
+                <span class="detail-pill">Ticket Promedio: <b>S/ {{ ticketPromedio() }}</b></span>
+              </div>
+            </div>
+
+            <!-- Sellers Breakdown -->
+            <div class="sellers-breakdown-box">
+              <div class="sellers-header">
+                <b>Ventas por Canal & Vendedor</b>
+                <small>{{ rep.por_taquillero?.length || 0 }} canales activos</small>
+              </div>
+
+              <div class="sellers-list">
+                @for (x of rep.por_taquillero; track x.taquillero) {
+                  <div class="seller-item">
+                    <div class="seller-meta">
+                      <b>{{ x.taquillero || 'Venta Web (Portal)' }}</b>
+                      <span>{{ x.boletos }} boletos · <b>S/ {{ dinero(x.total) }}</b></span>
+                    </div>
+                    <div class="meter-track">
+                      <div class="meter-fill" [style.width.%]="participacion(x.total)"></div>
+                    </div>
+                  </div>
+                } @empty {
+                  <div class="empty-inline-msg">
+                    <span>Sin ventas registradas en el periodo seleccionado.</span>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        }
       </section>
-      <section class="report-card occupancy-card"><div class="report-card-heading"><div><span class="report-kicker">ESTADO DE LA FLOTA</span><h2>Ocupación por viaje</h2><p>Compara los asientos vendidos con la capacidad de cada bus.</p></div><span class="occupancy-count">{{ocup.length}} viajes</span></div>
-        @if (ocup.length) {<div class="occupancy-table-wrap"><table><thead><tr><th>Viaje</th><th>Ruta</th><th>Fecha y hora</th><th>Bus</th><th>Estado</th><th>Ocupación</th></tr></thead><tbody>@for (x of ocup; track x.id) {<tr><td><b>#{{x.id}}</b></td><td><b>{{x.origen}} → {{x.destino}}</b></td><td>{{fecha(x.fecha_salida)}}<small>{{x.hora_salida}}</small></td><td>{{x.placa}}</td><td><span class="trip-status" [class]="'trip-status state-' + (x.estado || '').toLowerCase()">{{x.estado}}</span></td><td><div class="occupancy-cell"><span class="occupancy-meter"><i [style.width.%]="porcentaje(x.ocupacion_pct)"></i></span><b>{{porcentaje(x.ocupacion_pct)}}%</b><small>{{x.ocupados}} / {{x.asientos_total}} asientos</small></div></td></tr>}</tbody></table></div>} @else {<div class="reports-empty"><span>▤</span><b>No hay viajes para mostrar</b><p>Cuando se programen salidas, su ocupación aparecerá aquí.</p></div>}
+
+      <!-- Fleet Occupancy Card -->
+      <section class="metric-panel occupancy-panel">
+        <div class="panel-top-row">
+          <div>
+            <span class="kicker">OPTIMIZACIÓN DE FLOTA</span>
+            <h2>Ocupación de Salidas Activas</h2>
+            <p>Control de asientos vendidos versus capacidad máxima por cada unidad programada.</p>
+          </div>
+          <div class="count-tag">{{ ocup.length }} viajes registrados</div>
+        </div>
+
+        @if (ocup.length) {
+          <div class="table-scroll-wrap">
+            <table class="report-table">
+              <thead>
+                <tr>
+                  <th>Viaje</th>
+                  <th>Itinerario / Ruta</th>
+                  <th>Fecha y Hora</th>
+                  <th>Unidad Bus</th>
+                  <th>Estado</th>
+                  <th style="min-width: 180px;">Ocupación</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (x of ocup; track x.id) {
+                  <tr>
+                    <td><span class="trip-id-tag">#{{ x.id }}</span></td>
+                    <td>
+                      <b class="route-name">{{ x.origen }} ⟶ {{ x.destino }}</b>
+                    </td>
+                    <td>
+                      <div>{{ fecha(x.fecha_salida) }}</div>
+                      <small class="time-sub">{{ x.hora_salida }} hrs</small>
+                    </td>
+                    <td>
+                      <span class="bus-tag">Bus {{ x.placa }}</span>
+                    </td>
+                    <td>
+                      <span class="state-chip state-{{ (x.estado || '').toLowerCase() }}">
+                        {{ x.estado }}
+                      </span>
+                    </td>
+                    <td>
+                      <div class="occupancy-progress-cell">
+                        <div class="occupancy-numbers">
+                          <b>{{ porcentaje(x.ocupacion_pct) }}%</b>
+                          <small>{{ x.ocupados }} / {{ x.asientos_total }} asientos</small>
+                        </div>
+                        <div class="occupancy-bar-track">
+                          <div class="occupancy-bar-fill" 
+                               [class.high-occupancy]="porcentaje(x.ocupacion_pct) > 75"
+                               [style.width.%]="porcentaje(x.ocupacion_pct)"></div>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <div class="report-empty-state">
+            <span class="empty-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+            </span>
+            <b>No hay salidas registradas</b>
+            <p>Cuando programes viajes en el panel de administración, la ocupación aparecerá aquí automáticamente.</p>
+          </div>
+        }
       </section>
-    </section>`,
+    </section>
+  `,
   styles: [`
-    :host{display:block}.reports-page{max-width:1180px;margin:0 auto;padding:27px 0 48px;color:#1d322b}.reports-heading{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:19px}.reports-heading h1{margin:6px 0;font:800 clamp(27px,3vw,36px)/1.1 Manrope,sans-serif;letter-spacing:-.055em}.reports-heading p,.report-card-heading p{margin:0;color:#7c8b82;font-size:12px}.report-kicker{display:block;color:#7e9284;font-size:9px;font-weight:800;letter-spacing:.15em}.report-refresh{padding:9px 12px;border:1px solid #dbe6dd;border-radius:8px;background:#fff;color:#315a43;font-size:10px;font-weight:700;cursor:pointer}.report-card{margin-bottom:14px;padding:21px;border:1px solid #e4ebe4;border-radius:14px;background:#fff;box-shadow:0 9px 30px #18382a09}.report-card-heading{display:flex;align-items:center;justify-content:space-between;gap:14px}.report-card-heading h2{margin:5px 0;font:800 18px Manrope,sans-serif;letter-spacing:-.035em}.report-symbol{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:#eff5e8;color:#497a51;font:800 16px Manrope,sans-serif}.date-filter{display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin-top:18px}.date-filter label{display:grid;gap:5px;color:#687b70;font-size:10px;font-weight:700}.date-filter input{width:180px;height:38px;margin:0}.report-primary{height:38px;display:flex;align-items:center;gap:16px;padding:0 13px;border:0;border-radius:8px;background:#174d43;color:#fff;font-size:10px;font-weight:700;cursor:pointer}.report-primary:hover{background:#286c56}.sales-total{display:grid;grid-template-columns:minmax(190px,.7fr) minmax(0,1.6fr);gap:20px;margin-top:19px;padding:16px;border-radius:11px;background:#f6f8f3}.sales-total>div:first-child{display:grid;align-content:start;gap:6px}.sales-total>div:first-child>span{color:#8a998e;font-size:9px;font-weight:800;letter-spacing:.12em}.sales-total>div:first-child>b{color:#214935;font:800 28px Manrope,sans-serif;letter-spacing:-.04em}.sales-total>div:first-child>small{color:#7d8a80;font-size:10px}.sales-bars{padding-left:18px;border-left:1px solid #e3e9e0}.sales-bar-label{display:flex;justify-content:space-between;gap:10px;color:#607167;font-size:10px;font-weight:700}.sales-bar-label small{color:#8a968d;font-weight:400}.seller-row{display:grid;grid-template-columns:minmax(130px,.9fr) minmax(100px,1fr);align-items:center;gap:14px;margin-top:12px}.seller-row>div{display:grid;gap:3px}.seller-row b{color:#43594a;font-size:10px}.seller-row span{color:#829087;font-size:9px}.seller-meter,.occupancy-meter{height:8px;overflow:hidden;border-radius:99px;background:#e3e9e2}.seller-meter i,.occupancy-meter i{display:block;height:100%;border-radius:inherit;background:#438260}.report-empty-inline{margin:12px 0 0;color:#86938a;font-size:10px}.occupancy-count{padding:7px 10px;border-radius:99px;background:#eff5ee;color:#4e7457;font-size:9px;font-weight:700}.occupancy-table-wrap{overflow:auto;margin-top:15px;border:1px solid #e8ede7;border-radius:10px}.occupancy-table-wrap table{min-width:790px;margin:0;font-size:10px}.occupancy-table-wrap th{background:#f6f8f4;color:#708076;font-size:9px;text-transform:uppercase;letter-spacing:.06em}.occupancy-table-wrap td{padding:11px 10px;color:#5b6d62}.occupancy-table-wrap td b{color:#344c3b}.occupancy-table-wrap td small{display:block;margin-top:3px;color:#8b968e;font-size:9px}.occupancy-cell{display:grid;grid-template-columns:minmax(90px,120px) 34px;align-items:center;gap:5px 8px}.occupancy-cell>b{font-size:10px}.occupancy-cell>small{grid-column:1/-1}.trip-status{display:inline-flex;padding:5px 8px;border-radius:99px;background:#eaf3e9;color:#47724e;font-size:9px;font-weight:800;white-space:nowrap}.state-cancelado{background:#fae9e6;color:#a6584b}.state-finalizado{background:#edf0f2;color:#627580}.occupancy-meter{width:100%}.reports-empty{display:grid;justify-items:center;gap:6px;padding:32px;color:#849188;text-align:center}.reports-empty>span{font-size:25px;color:#8ba391}.reports-empty>b{color:#42584a;font-size:12px}.reports-empty p{margin:0;font-size:10px}@media(max-width:700px){.reports-page{padding:18px 0 34px}.report-card{padding:16px}.sales-total{grid-template-columns:1fr}.sales-bars{padding:14px 0 0;border-left:0;border-top:1px solid #e3e9e0}.seller-row{grid-template-columns:1fr}.seller-row>div{display:flex;justify-content:space-between;gap:6px}.date-filter label{flex:1 1 42%}.date-filter input{width:100%}.report-primary{width:100%;justify-content:space-between}.reports-heading{align-items:flex-start}}
+    .reports-shell {
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 24px 0 60px;
+    }
+    .reports-header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 20px;
+      padding-bottom: 22px;
+      border-bottom: 1px solid #e2e8e4;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .kicker {
+      font-size: 9px;
+      font-weight: 800;
+      color: #059669;
+      letter-spacing: 0.1em;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .reports-title {
+      font-size: 32px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.03em;
+      margin-bottom: 4px;
+    }
+    .reports-desc {
+      font-size: 13px;
+      color: #64748b;
+    }
+    .btn-refresh {
+      padding: 9px 16px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #334155;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-refresh:hover {
+      background: #f8fafc;
+      border-color: #94a3b8;
+    }
+
+    .metric-panel {
+      background: #ffffff;
+      border: 1px solid #e2e8e4;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+    }
+    .panel-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    .panel-top-row h2 {
+      font-size: 20px;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 2px;
+    }
+    .panel-top-row p {
+      font-size: 12px;
+      color: #64748b;
+    }
+    .currency-tag, .count-tag {
+      font-size: 11px;
+      font-weight: 800;
+      background: #ecfdf5;
+      color: #047857;
+      padding: 4px 10px;
+      border-radius: 9999px;
+    }
+
+    .date-filter-form {
+      display: flex;
+      align-items: flex-end;
+      gap: 14px;
+      background: #f8fafc;
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .filter-field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .filter-field label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #475569;
+    }
+    .filter-field input {
+      height: 38px;
+      padding: 0 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #0f172a;
+      background: #fff;
+    }
+    .filter-buttons {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn-filter-submit {
+      height: 38px;
+      padding: 0 16px;
+      border-radius: 8px;
+      background: #0f766e;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.15s;
+    }
+    .btn-filter-submit:hover { background: #115e59; }
+    .btn-preset {
+      height: 38px;
+      padding: 0 12px;
+      border: 1px solid #cbd5e1;
+      background: #fff;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #475569;
+      cursor: pointer;
+    }
+    .btn-preset:hover { background: #f1f5f9; }
+
+    .sales-results-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.6fr;
+      gap: 20px;
+    }
+    @media (max-width: 800px) {
+      .sales-results-grid { grid-template-columns: 1fr; }
+    }
+
+    .revenue-summary-box {
+      padding: 24px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #f0fdf4, #e6f9f0);
+      border: 1px solid #bbf7d0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .rev-label {
+      font-size: 10px;
+      font-weight: 800;
+      color: #15803d;
+      letter-spacing: 0.1em;
+      margin-bottom: 6px;
+    }
+    .rev-amount {
+      font-size: 38px;
+      font-weight: 900;
+      color: #064e3b;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      margin-bottom: 12px;
+    }
+    .rev-details {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .detail-pill {
+      font-size: 11px;
+      background: rgba(255, 255, 255, 0.8);
+      padding: 4px 10px;
+      border-radius: 6px;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+
+    .sellers-breakdown-box {
+      padding: 20px;
+      border-radius: 14px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+    }
+    .sellers-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #0f172a;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .sellers-header small { color: #64748b; }
+    .sellers-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .seller-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .seller-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #1e293b;
+    }
+    .seller-meta small { color: #64748b; }
+    .meter-track {
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+    .meter-fill {
+      height: 100%;
+      background: #10b981;
+      border-radius: 9999px;
+      transition: width 0.4s ease;
+    }
+    .empty-inline-msg {
+      padding: 20px;
+      text-align: center;
+      color: #94a3b8;
+      font-size: 12px;
+    }
+
+    /* Table */
+    .table-scroll-wrap {
+      overflow-x: auto;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+    }
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .report-table th {
+      background: #f8fafc;
+      padding: 12px 14px;
+      color: #64748b;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid #e2e8f0;
+      text-align: left;
+    }
+    .report-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #334155;
+    }
+    .report-table tr:hover td {
+      background: #f8fafc;
+    }
+    .trip-id-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: #0284c7;
+      background: #f0f9ff;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .route-name {
+      color: #0f172a;
+      font-size: 13px;
+    }
+    .time-sub {
+      color: #94a3b8;
+      font-size: 11px;
+    }
+    .bus-tag {
+      font-size: 12px;
+      color: #475569;
+    }
+    .state-chip {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 9999px;
+    }
+    .state-programado { background: #dcfce7; color: #15803d; }
+    .state-cancelado { background: #fee2e2; color: #b91c1c; }
+    .state-finalizado { background: #f1f5f9; color: #64748b; }
+    .state-en_ruta { background: #e0f2fe; color: #0369a1; }
+
+    .occupancy-progress-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .occupancy-numbers {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+    }
+    .occupancy-numbers b { color: #0f172a; }
+    .occupancy-numbers small { color: #64748b; }
+    .occupancy-bar-track {
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+    .occupancy-bar-fill {
+      height: 100%;
+      background: #0ea5e9;
+      border-radius: 9999px;
+      transition: width 0.3s;
+    }
+    .high-occupancy { background: #10b981; }
+
+    .report-empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #64748b;
+    }
+    .report-empty-state .empty-icon {
+      font-size: 32px;
+      display: block;
+      margin-bottom: 8px;
+    }
   `]
 })
 export class ReportesComponent implements OnInit {
-  desde = this.primerDiaMes(); hasta = this.hoyISO(); rep: any = null; ocup: any[] = []; cargando = false;
+  desde = this.primerDiaMes();
+  hasta = this.hoyISO();
+  rep: any = null;
+  ocup: any[] = [];
+  cargando = false;
+
   constructor(private api: Api) {}
-  ngOnInit(): void { this.consultarTodo(); }
-  consultarTodo(): void { this.ventas(); this.api.get<any[]>('/api/reportes/ocupacion').subscribe(o => this.ocup = o || []); }
+
+  ngOnInit(): void {
+    this.consultarTodo();
+  }
+
+  consultarTodo(): void {
+    this.ventas();
+    this.api.get<any[]>('/api/reportes/ocupacion').subscribe(o => this.ocup = o || []);
+  }
+
   ventas(): void {
     if (!this.desde || !this.hasta || this.hasta < this.desde) return;
     this.cargando = true;
-    this.api.get<any>(`/api/reportes/ventas?desde=${encodeURIComponent(this.desde)}&hasta=${encodeURIComponent(this.hasta)}`).subscribe({ next: r => { this.rep = r; this.cargando = false; }, error: () => this.cargando = false });
+    this.api.get<any>(`/api/reportes/ventas?desde=${encodeURIComponent(this.desde)}&hasta=${encodeURIComponent(this.hasta)}`).subscribe({
+      next: r => {
+        this.rep = r;
+        this.cargando = false;
+      },
+      error: () => this.cargando = false
+    });
   }
+
+  ticketPromedio(): string {
+    const total = Number(this.rep?.total?.total || 0);
+    const boletos = Number(this.rep?.total?.boletos || 0);
+    if (!boletos) return '0.00';
+    return (total / boletos).toFixed(2);
+  }
+
+  setMesActual(): void {
+    this.desde = this.primerDiaMes();
+    this.hasta = this.hoyISO();
+    this.ventas();
+  }
+
+  setUltimos7Dias(): void {
+    const d = new Date();
+    d.setDate(d.getDate() - 7);
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    this.desde = d.toISOString().slice(0, 10);
+    this.hasta = this.hoyISO();
+    this.ventas();
+  }
+
   dinero(v: any): string { return Number(v || 0).toFixed(2); }
-  porcentaje(v: any): number { return Math.max(0, Math.min(100, Number(v || 0))); }
-  participacion(v: any): number { const max = Math.max(0, ...(this.rep?.por_taquillero || []).map((x: any) => Number(x.total || 0))); return max ? this.porcentaje(Number(v || 0) / max * 100) : 0; }
-  fecha(v: string): string { return v ? new Date(`${v}T12:00:00`).toLocaleDateString('es-PE', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'; }
-  private hoyISO(): string { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); }
-  private primerDiaMes(): string { return this.hoyISO().slice(0, 8) + '01'; }
+  porcentaje(v: any): number { return Math.max(0, Math.min(100, Math.round(Number(v || 0)))); }
+  participacion(v: any): number {
+    const max = Math.max(0, ...(this.rep?.por_taquillero || []).map((x: any) => Number(x.total || 0)));
+    return max ? this.porcentaje(Number(v || 0) / max * 100) : 0;
+  }
+  fecha(v: string): string {
+    return v ? new Date(`${v}T12:00:00`).toLocaleDateString('es-PE', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+  }
+  private hoyISO(): string {
+    const d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 10);
+  }
+  private primerDiaMes(): string {
+    return this.hoyISO().slice(0, 8) + '01';
+  }
 }
