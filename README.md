@@ -4,15 +4,24 @@ Plataforma integral para la gestión y venta de pasajes de transporte terrestre 
 
 ---
 
-## 📚 Material de Estudio Incluido
+## 📚 Material de Estudio y Documentación Incluida
 
-En la raíz del proyecto se encuentra disponible la **[Guía de Estudio Completa (PDF)](./Guia_Estudio_Sistema_Viajes.pdf)** (`Guia_Estudio_Sistema_Viajes.pdf`), la cual detalla:
-- Arquitectura del sistema y flujo de datos SPA -> REST API -> SQLite.
-- Modelo de datos y restricciones de integridad (prevención de sobreventa de asientos con índices únicos condicionales).
-- Desglose y explicación línea por línea de los módulos del Backend (`backend/app.py`).
-- Organización modular del Frontend (Angular 21 Standalone Components, Signals y separación limpia de `.ts`, `.html` y `.css`).
-- Flujos por rol (Pasajero, Taquillero POS, Conductor y Administrador).
-- Preguntas conceptuales y respuestas para exámenes o sustentaciones de software.
+En la raíz del proyecto se encuentran disponibles dos manuales completos en formato PDF:
+
+1. **[Guía de Estudio Técnica Completa (PDF)](./Guia_Estudio_Sistema_Viajes.pdf)** (`Guia_Estudio_Sistema_Viajes.pdf`):
+   - Arquitectura del sistema y flujo de datos SPA -> REST API -> SQLite.
+   - Modelo de datos y restricciones de integridad (prevención de sobreventa de asientos con índices únicos condicionales).
+   - Desglose y explicación línea por línea de los módulos del Backend (`backend/app.py`).
+   - Organización modular del Frontend (Angular 21 Standalone Components, Signals y separación limpia de `.ts`, `.html` y `.css`).
+   - Flujos por rol (Pasajero, Taquillero POS, Conductor y Administrador).
+   - Preguntas conceptuales y respuestas para exámenes o sustentaciones de software.
+
+2. **[Catálogo Oficial de 30 Historias de Usuario (PDF)](./Historias_de_Usuario_Sistema_Viajes.pdf)** (`Historias_de_Usuario_Sistema_Viajes.pdf`):
+   - **30 Historias de Usuario completas** redactadas bajo el estándar ágil Scrum (INVEST).
+   - Estructura: *Como [Rol], Quiero [Acción], Para [Beneficio]*.
+   - Criterios de Aceptación verificables con enfoque *Dado-Cuando-Entonces*.
+   - Mapeo directo de cada historia hacia los endpoints del backend Flask y componentes de Angular 21.
+   - Clasificación por prioridades (Alta, Media, Baja) y 5 Épicas del sistema.
 
 ---
 
