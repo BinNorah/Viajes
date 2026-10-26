@@ -1,0 +1,198 @@
+<div class="chofer-dashboard-container">
+  <!-- 1. LEFT SIDEBAR -->
+  <aside class="chofer-sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-badge-box">
+        <span class="brand-icon">RP</span>
+      </div>
+      <div class="brand-text">
+        <h3>Rutas del Perú</h3>
+        <span class="sub-portal">MÓDULO DE RUTA</span>
+      </div>
+    </div>
+
+    @if (usuarioActual(); as usuario) {
+      <div class="sidebar-user-card">
+        <div class="user-avatar-circle">{{ usuario.nombre.charAt(0) }}</div>
+        <div class="user-meta">
+          <span class="user-name">{{ usuario.nombre }}</span>
+          <span class="role-pill">CONDUCTOR AUTORIZADO</span>
+        </div>
+      </div>
+    }
+
+    <nav class="sidebar-nav">
+      <div class="nav-group-label">OPERACIÓN DE FLOTA</div>
+      <button type="button" class="nav-item-btn active">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="16" rx="3"></rect>
+            <path d="M3 11h18"></path>
+            <circle cx="7" cy="15" r="1.5"></circle>
+            <circle cx="17" cy="15" r="1.5"></circle>
+            <path d="M5 19v2"></path><path d="M19 19v2"></path>
+          </svg>
+        </span>
+        <span>Mis Salidas Asignadas</span>
+      </button>
+
+      @if (usuarioActual()?.rol === 'ADMIN') {
+        <div class="nav-group-label">ADMINISTRACIÓN</div>
+        <a routerLink="/admin" class="nav-item-link">
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+          </span>
+          <span>Panel de Administrador</span>
+        </a>
+      }
+    </nav>
+
+    <div class="sidebar-bottom">
+      <a routerLink="/" class="btn-public-site">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+        <span>Ver Web Pública</span>
+      </a>
+      <button type="button" class="btn-logout-sidebar" (click)="cerrarSesion()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+        <span>Cerrar Sesión</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- 2. MAIN VIEWPORT -->
+  <main class="chofer-main-viewport">
+    <header class="main-top-header">
+      <div class="header-breadcrumbs">
+        <span class="breadcrumb-root">Módulo de Ruta</span>
+        <span class="breadcrumb-separator">/</span>
+        <span class="breadcrumb-current">Itinerarios y Manifiestos Oficiales</span>
+      </div>
+
+      <div class="header-status-pill">
+        <span class="pulse-status-dot"></span>
+        <span>Unidad Habilitada · Monitoreo SUTRAN Activo</span>
+      </div>
+    </header>
+
+    <div class="chofer-content-area">
+      <div class="chofer-hero">
+        <h2>Mis Viajes e Itinerarios</h2>
+        <p>Revisa tus unidades asignadas, horas de salida programadas y listas de pasajeros confirmados para el abordaje.</p>
+      </div>
+
+      @if (cargando) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Consultando asignaciones de ruta…</p>
+        </div>
+      } @else if (viajes.length) {
+        <div class="driver-trips-grid">
+          @for (viaje of viajes; track viaje.id) {
+            <article class="driver-trip-card">
+              <div class="dt-top">
+                <div class="dt-time-badge">
+                  <span class="dt-time">{{ viaje.hora_salida }}</span>
+                  <small>{{ viaje.fecha_salida }}</small>
+                </div>
+                <span class="trip-status status-{{ viaje.estado.toLowerCase() }}">{{ viaje.estado }}</span>
+              </div>
+
+              <div class="dt-route">
+                <b>{{ viaje.origen }} ⟶ {{ viaje.destino }}</b>
+                <div class="dt-bus-meta">
+                  <span>Bus {{ viaje.placa }} ({{ viaje.tipo_servicio }})</span>
+                  <span>Distancia: {{ viaje.distancia_km }} km</span>
+                </div>
+              </div>
+
+              <div class="dt-passengers-bar">
+                <div class="pax-counter">
+                  <b>{{ viaje.ocupados }}</b>
+                  <small>pasajeros a bordo</small>
+                </div>
+                <div class="pax-actions">
+                  <button type="button" class="btn-pax-view" (click)="verPasajeros(viaje)">
+                    Ver Lista de Pasajeros
+                  </button>
+                  <a [href]="'/api/viajes/' + viaje.id + '/manifiesto'" class="btn-manifest-download">
+                    Descargar Manifiesto CSV
+                  </a>
+                </div>
+              </div>
+            </article>
+          }
+        </div>
+      } @else {
+        <div class="empty-driver-card">
+          <span class="empty-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+              <circle cx="7" cy="18" r="1.5"></circle>
+              <circle cx="17" cy="18" r="1.5"></circle>
+            </svg>
+          </span>
+          <h3>No tienes salidas asignadas en este momento</h3>
+          <p>Tu coordinador de flota te asignará itinerarios cuando se programen nuevos viajes en la base de datos.</p>
+        </div>
+      }
+    </div>
+  </main>
+</div>
+
+<!-- Modal de Pasajeros -->
+@if (manifiestoModal) {
+  <div class="modal-backdrop" (click)="cerrarManifiesto()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <div>
+          <span class="kicker">MANIFIESTO DE PASAJEROS</span>
+          <h3>Viaje #{{ manifiestoModal.viaje.id }} · {{ manifiestoModal.viaje.origen }} ⟶ {{ manifiestoModal.viaje.destino }}</h3>
+          <small>{{ manifiestoModal.viaje.fecha_salida }} {{ manifiestoModal.viaje.hora_salida }} · Bus {{ manifiestoModal.viaje.placa }}</small>
+        </div>
+        <button class="btn-close" (click)="cerrarManifiesto()">Cerrar</button>
+      </div>
+
+      <div class="modal-content">
+        @if (manifiestoModal.pasajeros?.length) {
+          <table class="pax-table">
+            <thead>
+              <tr>
+                <th>Asiento</th>
+                <th>Pasajero</th>
+                <th>Documento</th>
+                <th>Teléfono</th>
+                <th>Código Boleto</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (pasajero of manifiestoModal.pasajeros; track pasajero.id) {
+                <tr>
+                  <td><b class="seat-pill">#{{ pasajero.numero_asiento }} (P{{ pasajero.piso }})</b></td>
+                  <td><b>{{ pasajero.nombres }} {{ pasajero.apellidos }}</b></td>
+                  <td>{{ pasajero.tipo_documento }} {{ pasajero.numero_documento }}</td>
+                  <td>{{ pasajero.telefono || '—' }}</td>
+                  <td><span class="qr-pill">{{ pasajero.codigo_qr }}</span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        } @else {
+          <div class="empty-driver-card" style="padding: 24px;">
+            <p>No se han registrado boletos pagados aún para este viaje.</p>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}

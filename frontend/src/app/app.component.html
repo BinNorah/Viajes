@@ -1,0 +1,160 @@
+@if (!esRutaPrivilegiada()) {
+  <header class="hd">
+    <div class="header-container">
+      <a class="brand" routerLink="/" aria-label="Rutas del Perú, inicio">
+        <span class="brand-mark">RP</span>
+        <span class="brand-copy">
+          <b>Rutas del Perú</b>
+          <small>TERMINAL DE VIAJES</small>
+        </span>
+      </a>
+
+      <nav class="main-nav" aria-label="Navegación principal">
+        <a routerLink="/" routerLinkActive="on" [routerLinkActiveOptions]="{exact:true}">
+          <span>Inicio</span>
+        </a>
+        <a routerLink="/pasajes" routerLinkActive="on">
+          <span>Buscar Pasajes</span>
+        </a>
+
+        @if (usuarioActual(); as usuario) {
+          @if (usuario.rol !== 'CHOFER') {
+            <a routerLink="/mis-viajes" routerLinkActive="on">
+              <span>Mis Boletos</span>
+            </a>
+          }
+          @if (usuario.rol === 'TAQUILLERO' || usuario.rol === 'ADMIN') {
+            <a routerLink="/taquilla" routerLinkActive="on" class="staff-link">
+              <span class="dot-indicator"></span> Taquilla POS
+            </a>
+          }
+          @if (usuario.rol === 'CHOFER') {
+            <a routerLink="/chofer" routerLinkActive="on" class="staff-link">
+              <span class="dot-indicator"></span> Mi Itinerario
+            </a>
+          }
+          @if (usuario.rol === 'ADMIN') {
+            <div class="nav-admin-group">
+              <a routerLink="/admin" routerLinkActive="on" [routerLinkActiveOptions]="{exact:true}">
+                <span>Administración</span>
+              </a>
+              <a routerLink="/admin/reservas" routerLinkActive="on">
+                <span>Reservas</span>
+              </a>
+              <a routerLink="/reportes" routerLinkActive="on">
+                <span>Reportes</span>
+              </a>
+            </div>
+          }
+        }
+      </nav>
+
+      <div class="account-area">
+        @if (usuarioActual(); as usuario) {
+          <div class="user-chip">
+            <div class="user-avatar">{{ usuario.nombre.charAt(0) }}</div>
+            <div class="user-info">
+              <span class="user-name">{{ usuario.nombre }}</span>
+              <span class="role-badge role-{{ usuario.rol.toLowerCase() }}">{{ rolNombre(usuario.rol) }}</span>
+            </div>
+            <button class="logout-btn" (click)="salir()" title="Cerrar sesión" aria-label="Cerrar sesión">
+              <span>Salir</span>
+            </button>
+          </div>
+        } @else {
+          <a class="account-button login-btn" routerLink="/login">
+            <span class="user-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </span>
+            <span>Ingresar</span>
+          </a>
+        }
+      </div>
+    </div>
+  </header>
+}
+
+<main [class.fullscreen-main]="esRutaPrivilegiada()">
+  <router-outlet></router-outlet>
+</main>
+
+<app-toasts></app-toasts>
+
+@if (!esRutaPrivilegiada()) {
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand-col">
+        <a class="brand footer-brand" routerLink="/">
+          <span class="brand-mark">RP</span>
+          <span class="brand-copy">
+            <b>Rutas del Perú</b>
+            <small>VIAJA A TU MANERA</small>
+          </span>
+        </a>
+        <p class="footer-tagline">
+          Plataforma digital para la compra de pasajes interprovinciales, selección de asientos en tiempo real y emisión de boletos electrónicos certificados.
+        </p>
+      </div>
+
+      <div class="footer-links-col">
+        <h4>Destinos Frecuentes</h4>
+        <ul>
+          <li><a routerLink="/pasajes" [queryParams]="{ origen: 'Lima', destino: 'Ayacucho' }">Lima → Ayacucho</a></li>
+          <li><a routerLink="/pasajes" [queryParams]="{ origen: 'Ayacucho', destino: 'Cusco' }">Ayacucho → Cusco</a></li>
+          <li><a routerLink="/pasajes" [queryParams]="{ origen: 'Lima', destino: 'Huancayo' }">Lima → Huancayo</a></li>
+          <li><a routerLink="/pasajes" [queryParams]="{ origen: 'Huancayo', destino: 'Lima' }">Huancayo → Lima</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-links-col">
+        <h4>Servicios & Flota</h4>
+        <ul>
+          <li><span>Bus Cama 160°</span></li>
+          <li><span>VIP 180° Panorámico</span></li>
+          <li><span>Monitoreo Satelital 24/7</span></li>
+          <li><span>Factura y Boleta Electrónica</span></li>
+        </ul>
+      </div>
+
+      <div class="footer-trust-col">
+        <h4>Operación Certificada</h4>
+        <div class="trust-badge">
+          <span class="trust-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+          </span>
+          <div>
+            <b>Seguridad Garantizada</b>
+            <small>Boletos electrónicos certificados</small>
+          </div>
+        </div>
+        <div class="trust-badge" style="margin-top:10px;">
+          <span class="trust-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </span>
+          <div>
+            <b>Horarios en Tiempo Real</b>
+            <small>Control de flota y asignación de asientos</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="footer-bottom-inner">
+        <span>© 2026 Rutas del Perú · Todos los derechos reservados</span>
+        <div class="footer-meta">
+          <span class="dot-live"></span>
+          <span>Servicio Oficial Interprovincial • Autorización MTC Nº 2026-TER</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+}

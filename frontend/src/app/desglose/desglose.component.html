@@ -1,0 +1,30 @@
+<div class="fare-card">
+  @if (asientos && asientos.length > 1) {
+    <div class="fare-header-multi">
+      <span class="fare-multi-title">Detalle de Pasajes ({{ asientos.length }} Asientos)</span>
+    </div>
+    @for (item of asientos; track item.id; let i = $index) {
+      <div class="fare-row">
+        <span>Pasajero {{ i + 1 }} · Asiento #{{ item.numero_asiento }} (Piso {{ item.piso }})</span>
+        <b>S/ {{ formatearNumero(item.precio_final || (item.precio_base + item.recargo_precio)) }}</b>
+      </div>
+    }
+  } @else if (asiento) {
+    <div class="fare-row">
+      <span>Tarifa Base de Ruta</span>
+      <b>S/ {{ formatearNumero(asiento?.precio_base) }}</b>
+    </div>
+    <div class="fare-row" [class.highlight]="asiento?.recargo_precio > 0">
+      <span>Recargo de Asiento ({{ asiento?.ubicacion || 'General' }})</span>
+      <b>+ S/ {{ formatearNumero(asiento?.recargo_precio) }}</b>
+    </div>
+  }
+
+  <div class="fare-total-row">
+    <div>
+      <span class="total-label">Total a Pagar</span>
+      <small class="tax-info">Incluye IGV y emisión electrónica</small>
+    </div>
+    <span class="total-price">S/ {{ calcularTotal() }}</span>
+  </div>
+</div>

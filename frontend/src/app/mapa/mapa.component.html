@@ -1,0 +1,129 @@
+<div class="seat-map-container" aria-label="Croquis interactivo de asientos">
+  <div class="map-header">
+    <div class="seat-legend">
+      <span class="legend-item"><i class="leg-box leg-free"></i> Libre</span>
+      <span class="legend-item"><i class="leg-box leg-selected"></i> Seleccionado</span>
+      <span class="legend-item"><i class="leg-box leg-blocked"></i> Reservado</span>
+      <span class="legend-item"><i class="leg-box leg-occupied"></i> Ocupado</span>
+    </div>
+
+    @if (pisos.length > 1) {
+      <div class="floor-selector">
+        @for (piso of pisos; track piso) {
+          <button type="button" 
+                  class="floor-btn" 
+                  [class.active]="pisoActivo === piso"
+                  (click)="pisoActivo = piso">
+            Piso {{ piso }}
+            <span class="floor-badge">{{ asientosPorPiso(piso).length }} asientos</span>
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  @if (cargando) {
+    <div class="map-loading">
+      <div class="spinner"></div>
+      <p>Cargando disponibilidad del bus en tiempo real…</p>
+    </div>
+  } @else {
+    <div class="bus-coach">
+      <div class="bus-cockpit">
+        <div class="driver-wheel" title="Cabina del Conductor">
+          <span class="wheel-icon">⎈</span>
+          <span class="driver-label">CONDUCTOR</span>
+        </div>
+        <div class="bus-door">
+          <span>PUERTA</span>
+        </div>
+      </div>
+
+      <div class="bus-cabin">
+        <div class="cabin-label">
+          <span>PISO {{ pisoActivo }} · {{ pisoActivo === 1 ? 'PRIMER NIVEL' : 'SEGUNDO NIVEL PANORÁMICO' }}</span>
+        </div>
+
+        <div class="seats-rows-grid">
+          @for (fila of filasPorPiso(pisoActivo); track fila) {
+            <div class="seat-row">
+              <div class="col-group">
+                @for (asiento of asientosEnFila(pisoActivo, fila, [1, 2]); track asiento.id) {
+                  <button type="button"
+                          class="seat-btn"
+                          [class.is-free]="asiento.estado === 'LIBRE'"
+                          [class.is-selected]="estaSeleccionado(asiento)"
+                          [class.is-occupied]="asiento.estado === 'OCUPADO'"
+                          [class.is-blocked]="asiento.estado === 'BLOQUEADO'"
+                          [disabled]="asiento.estado !== 'LIBRE' && !asiento.mio"
+                          (click)="seleccionar(asiento)"
+                          [title]="'Asiento ' + asiento.numero_asiento + ' (' + asiento.ubicacion + ') - S/ ' + precioAsiento(asiento)">
+                    <span class="seat-num">{{ asiento.numero_asiento }}</span>
+                    <span class="seat-pos">{{ asiento.ubicacion.charAt(0) }}</span>
+                    @if (estaSeleccionado(asiento)) {
+                      <span class="seat-order-tag">{{ indiceSeleccion(asiento) + 1 }}</span>
+                    }
+                    @if (asiento.recargo_precio > 0) {
+                      <span class="seat-vip" title="Asiento VIP">+S/{{ asiento.recargo_precio }}</span>
+                    }
+                  </button>
+                }
+              </div>
+
+              <div class="aisle-lane" title="Pasillo">
+                <span class="aisle-num">{{ fila }}</span>
+              </div>
+
+              <div class="col-group">
+                @for (asiento of asientosEnFila(pisoActivo, fila, [3, 4]); track asiento.id) {
+                  <button type="button"
+                          class="seat-btn"
+                          [class.is-free]="asiento.estado === 'LIBRE'"
+                          [class.is-selected]="estaSeleccionado(asiento)"
+                          [class.is-occupied]="asiento.estado === 'OCUPADO'"
+                          [class.is-blocked]="asiento.estado === 'BLOQUEADO'"
+                          [disabled]="asiento.estado !== 'LIBRE' && !asiento.mio"
+                          (click)="seleccionar(asiento)"
+                          [title]="'Asiento ' + asiento.numero_asiento + ' (' + asiento.ubicacion + ') - S/ ' + precioAsiento(asiento)">
+                    <span class="seat-num">{{ asiento.numero_asiento }}</span>
+                    <span class="seat-pos">{{ asiento.ubicacion.charAt(0) }}</span>
+                    @if (estaSeleccionado(asiento)) {
+                      <span class="seat-order-tag">{{ indiceSeleccion(asiento) + 1 }}</span>
+                    }
+                    @if (asiento.recargo_precio > 0) {
+                      <span class="seat-vip" title="Asiento VIP">+S/{{ asiento.recargo_precio }}</span>
+                    }
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    @if (seleccionados.length > 0) {
+      <div class="selected-seat-bar">
+        <div class="selected-left">
+          <span class="check-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </span>
+          <div>
+            <b>{{ seleccionados.length === 1 ? '1 Asiento Seleccionado' : seleccionados.length + ' Asientos Seleccionados' }}</b>
+            <div class="selected-seats-chips">
+              @for (asiento of seleccionados; track asiento.id) {
+                <span class="seat-pill-chip">
+                  Asiento #{{ asiento.numero_asiento }} (Piso {{ asiento.piso }} · {{ asiento.ubicacion }})
+                </span>
+              }
+            </div>
+          </div>
+        </div>
+        <div class="selected-price">
+          <small>Total a pagar ({{ seleccionados.length }} pasaje{{ seleccionados.length > 1 ? 's' : '' }})</small>
+          <b>S/ {{ totalSeleccionados() }}</b>
+        </div>
+      </div>
+    }
+  }
+</div>

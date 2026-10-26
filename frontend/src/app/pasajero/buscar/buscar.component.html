@@ -1,0 +1,296 @@
+<section class="hero-wrapper" id="buscador-pasajes">
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span class="pulse-dot"></span>
+      <span>SISTEMA DE RESERVAS · SALIDAS CONFIRMADAS EN TIEMPO REAL</span>
+    </div>
+    <h1 class="hero-title">
+      Buscador de Pasajes<br>
+      <em>y Asientos en Vivo.</em>
+    </h1>
+    <p class="hero-desc">
+      Filtra por ciudad, selecciona el horario que mejor te convenga y reserva tu butaca favorita en nuestro croquis interactivo de 1 y 2 pisos.
+    </p>
+
+    <div class="hero-highlights">
+      <span class="highlight-chip">Confirmación de boleto digital inmediata</span>
+      <span class="highlight-chip">Bloqueo atómico de asiento por 10 min</span>
+      <span class="highlight-chip">Múltiples métodos de pago</span>
+    </div>
+  </div>
+
+  <!-- Search Panel -->
+  <form class="interactive-search-card" id="buscar" (ngSubmit)="buscar()">
+    <div class="search-header">
+      <div class="search-title-group">
+        <span class="kicker">RESERVA DIGITAL DE PASAJES</span>
+        <h2>¿A dónde deseas viajar?</h2>
+      </div>
+      <div class="search-shortcuts">
+        <button type="button" class="date-chip" [class.active]="esFecha(0)" (click)="establecerFechaOffset(0)">Hoy</button>
+        <button type="button" class="date-chip" [class.active]="esFecha(1)" (click)="establecerFechaOffset(1)">Mañana</button>
+        <button type="button" class="date-chip" [class.active]="esFecha(2)" (click)="establecerFechaOffset(2)">Pasado mañana</button>
+        <button type="button" class="date-chip" [class.active]="!filtro.fecha" (click)="limpiarFecha()">Todas las fechas</button>
+      </div>
+    </div>
+
+    <div class="search-inputs-grid">
+      <div class="input-block">
+        <label for="buscar-origen">CIUDAD DE ORIGEN</label>
+        <select id="buscar-origen" name="origen" [(ngModel)]="filtro.origen" class="search-field-control">
+          <option value="">Cualquier origen</option>
+          @for (ciudad of ciudades; track ciudad) {
+            <option [value]="ciudad">{{ ciudad }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="input-block">
+        <label for="buscar-destino">CIUDAD DE DESTINO</label>
+        <select id="buscar-destino" name="destino" [(ngModel)]="filtro.destino" class="search-field-control">
+          <option value="">Cualquier destino</option>
+          @for (ciudad of ciudades; track ciudad) {
+            <option [value]="ciudad" [disabled]="ciudad === filtro.origen">{{ ciudad }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="input-block">
+        <label for="buscar-fecha">FECHA DE SALIDA</label>
+        <input id="buscar-fecha" type="date" name="fecha" [(ngModel)]="filtro.fecha" [min]="fechaMinima" class="search-field-control">
+      </div>
+
+      <div class="action-block">
+        <button type="submit" class="btn-search-main">
+          <span>Buscar Salidas</span>
+        </button>
+      </div>
+    </div>
+  </form>
+</section>
+
+<!-- Results List -->
+<section class="results-wrapper" id="resultados">
+  <div class="results-header">
+    <div>
+      <span class="kicker">HORARIOS Y FLOTA</span>
+      <h2 class="results-title">Salidas Disponibles</h2>
+      <p class="results-subtitle">
+        @if (filtro.origen || filtro.destino) {
+          Mostrando rutas de <b>{{ filtro.origen || 'Cualquier origen' }}</b> hacia <b>{{ filtro.destino || 'Cualquier destino' }}</b>
+        } @else {
+          Mostrando todas las salidas programadas
+        }
+      </p>
+    </div>
+    <div class="results-count-badge">
+      <b>{{ viajes.length }}</b> salidas encontradas
+    </div>
+  </div>
+
+  @if (cargando) {
+    <div class="search-loading">
+      <div class="spinner"></div>
+      <p>Buscando viajes disponibles y verificando disponibilidad de asientos…</p>
+    </div>
+  } @else if (viajes.length) {
+    <div class="trips-grid">
+      @for (viaje of viajes; track viaje.id) {
+        <article class="trip-card" [class.is-selected]="viajeSeleccionado?.id === viaje.id">
+          <div class="trip-time-col">
+            <div class="time-block">
+              <span class="time-val">{{ viaje.hora_salida }}</span>
+              <small class="date-val">{{ diaSemana(viaje.fecha_salida) }}, {{ dia(viaje.fecha_salida) }} {{ mes(viaje.fecha_salida) }}</small>
+            </div>
+            <span class="service-pill">{{ servicio(viaje.tipo_servicio) }}</span>
+          </div>
+
+          <div class="trip-route-col">
+            <div class="route-nodes">
+              <div class="node-item">
+                <span class="node-dot start"></span>
+                <div>
+                  <b>{{ viaje.origen }}</b>
+                  <small>{{ viaje.terminal_origen || 'Terminal Principal' }}</small>
+                </div>
+              </div>
+              <div class="route-line-info">
+                <span>{{ viaje.duracion_horas ? viaje.duracion_horas + ' hrs aprox' : 'Directo' }}</span>
+              </div>
+              <div class="node-item">
+                <span class="node-dot end"></span>
+                <div>
+                  <b>{{ viaje.destino }}</b>
+                  <small>{{ viaje.terminal_destino || 'Terminal Terrestre' }}</small>
+                </div>
+              </div>
+            </div>
+
+            <div class="bus-meta-tags">
+              <span>Bus {{ viaje.placa }} ({{ viaje.marca }} {{ viaje.modelo || '' }})</span>
+              <span>{{ viaje.total_pisos === 2 ? 'Bus Panorámico 2 Pisos' : '1 Piso' }}</span>
+              <span class="seats-avail-tag">{{ viaje.asientos_libres ?? viaje.asientos_total }} asientos libres</span>
+            </div>
+          </div>
+
+          <div class="trip-price-col">
+            <small>Desde</small>
+            <div class="price-amount">
+              <b>S/ {{ precio(viaje.precio_base) }}</b>
+            </div>
+            <button type="button" class="btn-select-trip" (click)="seleccionarViaje(viaje)">
+              {{ viajeSeleccionado?.id === viaje.id ? 'Seleccionado' : 'Elegir Asientos' }}
+            </button>
+          </div>
+        </article>
+      }
+    </div>
+  } @else {
+    <div class="empty-results-card">
+      <h3>No encontramos viajes para este itinerario</h3>
+      <p>Prueba buscando para otra fecha o selecciona "Cualquier origen / Cualquier destino" para ver todas las salidas.</p>
+      <button type="button" class="btn-reset-search" (click)="resetFiltro()">Ver todas las rutas</button>
+    </div>
+  }
+</section>
+
+<!-- Seat Map & Booking Stage -->
+@if (viajeSeleccionado) {
+  <section class="booking-stage-wrapper" id="selector-asientos">
+    <div class="stage-card">
+      <div class="stage-header">
+        <div>
+          <span class="kicker">PASO 2 DE 3: SELECCIÓN DE ASIENTOS</span>
+          <h2>{{ viajeSeleccionado.origen }} ⟶ {{ viajeSeleccionado.destino }}</h2>
+          <small>{{ fechaLarga(viajeSeleccionado.fecha_salida) }} · Salida {{ viajeSeleccionado.hora_salida }} hrs · Bus {{ viajeSeleccionado.placa }}</small>
+        </div>
+        <button type="button" class="btn-close-stage" (click)="viajeSeleccionado = null; asientosSeleccionados = []">Cerrar</button>
+      </div>
+
+      <div class="stage-body">
+        <div class="map-column">
+          <app-mapa [viajeId]="viajeSeleccionado.id" [maxSeleccion]="6" (elegidos)="onAsientosSeleccionados($event)"></app-mapa>
+        </div>
+
+        <div class="summary-column">
+          <div class="booking-summary-box">
+            <h3>Resumen de Reserva</h3>
+            <p class="summary-seats-text">
+              Asientos seleccionados: <b>{{ asientosSeleccionados.length ? listaAsientosTexto() : 'Ninguno todavía' }}</b>
+            </p>
+
+            <app-desglose [asientos]="asientosSeleccionados"></app-desglose>
+
+            @if (reservas.length === 0) {
+              <div class="lock-action-box">
+                @if (!usuarioRegistrado) {
+                  <div class="login-notice">
+                    <p>Inicia sesión o regístrate para continuar con tu compra segura.</p>
+                    <a routerLink="/login" class="btn-login-prompt">Iniciar Sesión</a>
+                  </div>
+                } @else {
+                  <button type="button" class="btn-lock-seats" [disabled]="asientosSeleccionados.length === 0" (click)="bloquearAsientos()">
+                    Continuar con {{ asientosSeleccionados.length }} Asiento(s) →
+                  </button>
+                }
+              </div>
+            }
+
+            @if (reservas.length > 0) {
+              <!-- Locked state & Checkout -->
+              <div class="checkout-box" id="pago">
+                <div class="countdown-bar">
+                  <span>⏱ Tiempo restante para pagar:</span>
+                  <b class="timer-countdown">{{ tiempoRestante }}</b>
+                </div>
+
+                <div class="passengers-form-list">
+                  <h4>Datos de los Pasajeros</h4>
+                  @for (pasajero of pasajeros; track pasajero.id; let idx = $index) {
+                    <div class="passenger-item-form">
+                      <div class="pax-item-head">
+                        <b>Pasajero {{ idx + 1 }} · Asiento #{{ pasajero.asiento }}</b>
+                        @if (idx === 0 && pasajeros.length > 1) {
+                          <button type="button" class="btn-copy-contact" (click)="copiarContacto()">Copiar teléfono al resto</button>
+                        }
+                      </div>
+                      <div class="form-inputs-grid">
+                        <div>
+                          <label>Documento *</label>
+                          <input [(ngModel)]="pasajero.numero_documento" placeholder="DNI 8 dígitos" maxlength="12">
+                        </div>
+                        <div>
+                          <label>Nombres *</label>
+                          <input [(ngModel)]="pasajero.nombres" placeholder="Nombres">
+                        </div>
+                        <div>
+                          <label>Apellidos *</label>
+                          <input [(ngModel)]="pasajero.apellidos" placeholder="Apellidos">
+                        </div>
+                        <div>
+                          <label>Teléfono *</label>
+                          <input [(ngModel)]="pasajero.telefono" placeholder="WhatsApp / Celular">
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+
+                <!-- Payment form -->
+                <div class="card-payment-form">
+                  <h4>Pago con Tarjeta de Prueba</h4>
+                  <div class="form-inputs-grid">
+                    <div style="grid-column: 1 / -1;">
+                      <label>Número de Tarjeta</label>
+                      <input [(ngModel)]="tarjetaPago.tarjeta" placeholder="4557 0000 0000 0000" maxlength="19">
+                    </div>
+                    <div>
+                      <label>Vencimiento (MM/AA)</label>
+                      <input [(ngModel)]="tarjetaPago.vencimiento" placeholder="12/28" maxlength="5">
+                    </div>
+                    <div>
+                      <label>CVV</label>
+                      <input [(ngModel)]="tarjetaPago.cvv" placeholder="123" maxlength="4">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="checkout-actions">
+                  <button type="button" class="btn-pay-now" [disabled]="procesandoPago" (click)="pagar()">
+                    {{ procesandoPago ? 'Procesando Pago…' : 'Confirmar y Pagar S/ ' + precioTotalReservas() }}
+                  </button>
+                  <button type="button" class="btn-cancel-reservation" (click)="cancelarReserva()">
+                    Cancelar Reserva
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+}
+
+<!-- Confirmation Section -->
+@if (boletosEmitidos.length > 0) {
+  <section class="confirmation-section" id="confirmacion">
+    <div class="confirm-head">
+      <div class="confirm-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+      <h2>¡Compra Completada con Éxito!</h2>
+      <p>Se han emitido {{ boletosEmitidos.length }} boleto(s) digital(es). Puedes descargarlos o presentarlos en tu celular al abordar.</p>
+    </div>
+
+    <div class="boletos-carousel">
+      @for (boleto of boletosEmitidos; track boleto.id) {
+        <div class="boleto-display-item">
+          <app-boleto [boleto]="boleto"></app-boleto>
+        </div>
+      }
+    </div>
+  </section>
+}

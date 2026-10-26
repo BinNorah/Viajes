@@ -1,0 +1,35 @@
+<div class="passenger-fields-grid">
+  <div class="field-item">
+    <label>Tipo de Documento</label>
+    <select name="tipo_documento" [(ngModel)]="pasajero.tipo_documento">
+      <option value="DNI">DNI (Documento Nacional de Identidad)</option>
+      <option value="PASAPORTE">Pasaporte</option>
+      <option value="CE">Carné de Extranjería</option>
+    </select>
+  </div>
+
+  <div class="field-item">
+    <label>Número de Documento *</label>
+    <input name="numero_documento" 
+           [(ngModel)]="pasajero.numero_documento" 
+           [placeholder]="pasajero.tipo_documento === 'DNI' ? '8 dígitos' : 'Número de documento'"
+           [maxlength]="pasajero.tipo_documento === 'DNI' ? 8 : 15"
+           required 
+           autocomplete="off">
+  </div>
+
+  <div class="field-item">
+    <label>Nombres *</label>
+    <input name="nombres" [(ngModel)]="pasajero.nombres" placeholder="Ej. Juan Carlos" required autocomplete="given-name">
+  </div>
+
+  <div class="field-item">
+    <label>Apellidos *</label>
+    <input name="apellidos" [(ngModel)]="pasajero.apellidos" placeholder="Ej. Pérez Quispe" required autocomplete="family-name">
+  </div>
+
+  <div class="field-item field-full">
+    <label>Teléfono Celular / WhatsApp</label>
+    <input name="telefono" [(ngModel)]="pasajero.telefono" type="tel" placeholder="Ej. 987654321" autocomplete="tel">
+  </div>
+</div>

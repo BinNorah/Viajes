@@ -1,0 +1,147 @@
+<section class="reports-shell">
+  <header class="reports-header-bar">
+    <div>
+      <span class="kicker">INTELIGENCIA DE NEGOCIO & REPORTES</span>
+      <h1 class="reports-title">Análisis Comercial y Operativo</h1>
+      <p class="reports-desc">Seguimiento de ingresos por ventas, participación de taquillas y porcentaje de ocupación de buses.</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-refresh" (click)="consultarTodo()" [disabled]="cargando">
+        <span>{{ cargando ? 'Actualizando datos…' : '↻ Actualizar Reportes' }}</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Sales Card -->
+  <section class="metric-panel sales-panel">
+    <div class="panel-top-row">
+      <div>
+        <span class="kicker">RENDIMIENTO FINANCIERO</span>
+        <h2>Ventas por Periodo</h2>
+        <p>Filtra las transacciones registradas entre fechas determinadas.</p>
+      </div>
+      <div class="currency-tag">Soles (PEN)</div>
+    </div>
+
+    <!-- Date Range Filter Form -->
+    <form class="date-filter-form" (ngSubmit)="consultarVentas()">
+      <div class="filter-field">
+        <label>Fecha Desde:</label>
+        <input type="date" name="desde" [(ngModel)]="fechaDesde" required>
+      </div>
+      <div class="filter-field">
+        <label>Fecha Hasta:</label>
+        <input type="date" name="hasta" [(ngModel)]="fechaHasta" required [min]="fechaDesde">
+      </div>
+      <div class="filter-buttons">
+        <button type="submit" class="btn-filter-submit" [disabled]="cargando">
+          <span>{{ cargando ? 'Consultando…' : 'Consultar Rango' }}</span>
+          <span>→</span>
+        </button>
+        <button type="button" class="btn-preset" (click)="setMesActual()">Este Mes</button>
+        <button type="button" class="btn-preset" (click)="setUltimos7Dias()">Últimos 7 días</button>
+      </div>
+    </form>
+
+    @if (reporteVentas) {
+      <div class="sales-results-grid">
+        <!-- Total Revenue Box -->
+        <div class="revenue-summary-box">
+          <span class="rev-label">INGRESOS DEL PERIODO</span>
+          <div class="rev-val">
+            <small>S/</small>
+            <b>{{ dinero(reporteVentas.total?.total) }}</b>
+          </div>
+          <div class="rev-metrics">
+            <div>
+              <small>Boletos Pagados</small>
+              <b>{{ reporteVentas.total?.boletos || 0 }}</b>
+            </div>
+            <div>
+              <small>Ticket Promedio</small>
+              <b>S/ {{ ticketPromedio() }}</b>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sales by Cashier -->
+        <div class="cashier-breakdown-box">
+          <h4>Ventas por Punto / Taquillero</h4>
+          @if (reporteVentas.por_taquillero?.length) {
+            <div class="cashier-list">
+              @for (taquillero of reporteVentas.por_taquillero; track taquillero.taquillero) {
+                <div class="cashier-row">
+                  <div class="c-info">
+                    <b>{{ taquillero.taquillero || 'Venta Web / Digital' }}</b>
+                    <small>{{ taquillero.boletos }} boletos emitidos</small>
+                  </div>
+                  <div class="c-amount">
+                    <b>S/ {{ dinero(taquillero.total) }}</b>
+                    <div class="progress-bar-bg">
+                      <div class="progress-bar-fill" [style.width.%]="participacion(taquillero.total)"></div>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="empty-sub">Sin ventas en este periodo.</p>
+          }
+        </div>
+      </div>
+    }
+  </section>
+
+  <!-- Occupancy Panel -->
+  <section class="metric-panel occupancy-panel">
+    <div class="panel-top-row">
+      <div>
+        <span class="kicker">FACTOR DE OCUPACIÓN</span>
+        <h2>Ocupación de Asientos por Viaje</h2>
+        <p>Monitoreo del porcentaje de butacas vendidas en las salidas programadas.</p>
+      </div>
+    </div>
+
+    @if (reporteOcupacion.length) {
+      <div class="table-responsive">
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Ruta</th>
+              <th>Fecha & Hora</th>
+              <th>Bus (Placa)</th>
+              <th>Asientos Ocupados</th>
+              <th>Capacidad</th>
+              <th>Ocupación (%)</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (viaje of reporteOcupacion; track viaje.id) {
+              <tr>
+                <td><b>#{{ viaje.id }}</b></td>
+                <td><b>{{ viaje.origen }} ⟶ {{ viaje.destino }}</b></td>
+                <td>{{ viaje.fecha_salida }} {{ viaje.hora_salida }}</td>
+                <td>{{ viaje.placa }}</td>
+                <td><b>{{ viaje.ocupados }}</b></td>
+                <td>{{ viaje.capacidad_total || viaje.asientos_total }}</td>
+                <td>
+                  <div class="occupancy-cell">
+                    <b>{{ porcentaje(viaje.ocupacion_pct) }}%</b>
+                    <div class="progress-bar-bg small-bar">
+                      <div class="progress-bar-fill" [class.high-occupancy]="viaje.ocupacion_pct >= 80" [style.width.%]="porcentaje(viaje.ocupacion_pct)"></div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <div class="report-empty-state">
+        <p>No se encontraron datos de ocupación disponibles.</p>
+      </div>
+    }
+  </section>
+</section>

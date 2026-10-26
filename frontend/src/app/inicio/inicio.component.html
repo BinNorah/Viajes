@@ -1,0 +1,195 @@
+<div class="landing-container">
+  <!-- 1. Hero Section con Buscador Rápido -->
+  <section class="hero-section">
+    <div class="hero-overlay"></div>
+    <div class="hero-inner">
+      <div class="hero-badge">
+        <span class="badge-pulse"></span>
+        <span>TRANSPORTE INTERPROVINCIAL CERTIFICADO MTC · SUTRAN</span>
+      </div>
+
+      <h1 class="hero-main-title">
+        Conectamos el Perú con<br>
+        <span class="gradient-text">seguridad, confort y puntualidad.</span>
+      </h1>
+
+      <p class="hero-subtitle">
+        Reserva tus pasajes en línea en segundos, escoge tu asiento exacto en tiempo real y viaja en la flota de buses más moderna del país.
+      </p>
+
+      <!-- Tarjeta de Búsqueda Rápida -->
+      <div class="fast-search-card">
+        <div class="card-kicker-row">
+          <span class="kicker-label">BUSCADOR DIRECTO DE RUTAS</span>
+          <span class="kicker-tag">Salidas Diarias Garantizadas</span>
+        </div>
+
+        <form (ngSubmit)="buscarPasajes()" class="fast-search-grid">
+          <!-- Origen -->
+          <div class="search-field">
+            <label for="fast-origen">CIUDAD DE ORIGEN</label>
+            <div class="field-control">
+              <span class="field-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+              </span>
+              <select id="fast-origen" [(ngModel)]="origen" name="origen">
+                <option value="">Selecciona origen...</option>
+                @for (ciudad of ciudades; track ciudad) {
+                  <option [value]="ciudad">{{ ciudad }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <!-- Destino -->
+          <div class="search-field">
+            <label for="fast-destino">CIUDAD DE DESTINO</label>
+            <div class="field-control">
+              <span class="field-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polygon points="12 8 8 12 12 16 12 8"></polygon>
+                </svg>
+              </span>
+              <select id="fast-destino" [(ngModel)]="destino" name="destino">
+                <option value="">Selecciona destino...</option>
+                @for (ciudad of ciudades; track ciudad) {
+                  <option [value]="ciudad" [disabled]="ciudad === origen">{{ ciudad }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <!-- Fecha -->
+          <div class="search-field">
+            <label for="fast-fecha">FECHA DE SALIDA</label>
+            <div class="field-control">
+              <span class="field-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+              </span>
+              <input id="fast-fecha" type="date" [(ngModel)]="fecha" [min]="fechaMinima" name="fecha">
+            </div>
+          </div>
+
+          <!-- Botón de Búsqueda -->
+          <div class="search-action">
+            <button type="submit" class="btn-search-hero">
+              <span>Buscar Pasajes</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Trust Bar -->
+      <div class="hero-stats-row">
+        <div class="stat-pill">
+          <span class="stat-num">100%</span>
+          <span class="stat-label">Boletos con QR</span>
+        </div>
+        <div class="stat-separator"></div>
+        <div class="stat-pill">
+          <span class="stat-num">24/7</span>
+          <span class="stat-label">Monitoreo GPS</span>
+        </div>
+        <div class="stat-separator"></div>
+        <div class="stat-pill">
+          <span class="stat-num">+50</span>
+          <span class="stat-label">Salidas Diarias</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Destinos Populares -->
+  <section class="section-popular">
+    <div class="section-head">
+      <span class="section-kicker">RUTAS FRECUENTES</span>
+      <h2 class="section-title">Destinos más solicitados</h2>
+      <p class="section-subtitle">Conoce los principales corredores del país con los mejores precios y comodidades.</p>
+    </div>
+
+    <div class="popular-grid">
+      @for (destinoItem of destinosPopulares; track destinoItem.origen + destinoItem.destino) {
+        <article class="popular-card" (click)="irAViaje(destinoItem)" role="button" tabindex="0">
+          <div class="card-badge">{{ destinoItem.categoria }}</div>
+          <div class="card-route-title">
+            <b>{{ destinoItem.origen }}</b>
+            <span class="route-arrow">⟶</span>
+            <b>{{ destinoItem.destino }}</b>
+          </div>
+          <p class="card-desc">{{ destinoItem.descripcion }}</p>
+          <div class="card-meta">
+            @if (destinoItem.horario) {
+              <span class="meta-tag-highlight">Salida: {{ destinoItem.horario }} hrs</span>
+            } @else {
+              <span>Duración: {{ destinoItem.duracionAprox }}</span>
+            }
+            @if (destinoItem.asientosLibres) {
+              <span class="meta-tag-seats">{{ destinoItem.asientosLibres }} butacas libres</span>
+            } @else {
+              <span>{{ destinoItem.frecuencia }}</span>
+            }
+          </div>
+          <div class="card-footer-price">
+            <div>
+              <small>Precio desde</small>
+              <span class="price-val">S/ {{ destinoItem.precio }}</span>
+            </div>
+            <button type="button" class="btn-card-go" (click)="irAViaje(destinoItem); $event.stopPropagation()">Elegir Asiento →</button>
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+
+  <!-- 3. Cómo Funciona en 3 Pasos -->
+  <section class="section-how">
+    <div class="section-head">
+      <span class="section-kicker">EXPERIENCIA DIGITAL</span>
+      <h2 class="section-title">Comprar tu pasaje nunca fue tan fácil</h2>
+    </div>
+
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">01</div>
+        <h3>Busca tu Ruta</h3>
+        <p>Selecciona tu ciudad de origen, destino y fecha. Compara horarios y tipos de bus disponibles.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">02</div>
+        <h3>Elige tu Asiento</h3>
+        <p>Visualiza en vivo el croquis de 1 o 2 pisos y escoge tus butacas ventana o pasillo.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">03</div>
+        <h3>Paga y Aborda</h3>
+        <p>Confirma con tarjeta o débito y recibe tu boleto electrónico con código QR listo para viajar.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. CTA Final -->
+  <section class="final-cta-section">
+    <div class="final-cta-card">
+      <div>
+        <h2>¿Listo para tu próximo viaje?</h2>
+        <p>Viaja tranquilo con conductores certificados y seguro de viaje SOAT incluido en cada pasaje.</p>
+      </div>
+      <a routerLink="/pasajes" class="btn-cta-large">
+        Buscar Pasajes Disponibles
+      </a>
+    </div>
+  </section>
+</div>

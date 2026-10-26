@@ -1,0 +1,194 @@
+<section class="crud-container">
+  <header class="crud-header">
+    <div>
+      <span class="crud-kicker">GESTIÓN Y MANTENIMIENTO</span>
+      <h2 class="crud-title">{{ configuracion.title }}</h2>
+      <p class="crud-subtitle">Administra los registros y actualiza la información en la base de datos.</p>
+    </div>
+    <span class="crud-counter-badge">{{ filas.length }} registros totales</span>
+  </header>
+
+  <!-- Form Card -->
+  <form class="crud-form-card" (ngSubmit)="guardar()">
+    <div class="form-card-title">
+      <span class="form-action-tag">{{ idEnEdicion ? 'Modo Edición' : 'Nuevo Registro' }}</span>
+      @if (idEnEdicion) {
+        <small class="editing-id">Editando ID #{{ idEnEdicion }}</small>
+      }
+    </div>
+
+    <div class="crud-fields-grid">
+      @for (campo of configuracion.fields; track campo.name) {
+        <div class="form-field">
+          <label>{{ etiqueta(campo.labelText || campo.name) }}</label>
+          @switch (campo.type) {
+            @case ('sel') {
+              <select [name]="campo.name" [(ngModel)]="modelo[campo.name]">
+                @for (opcionItem of campo.options; track opcionItem) {
+                  <option [ngValue]="opcionItem">{{ opcion(opcionItem) }}</option>
+                }
+              </select>
+            }
+            @case ('ref') {
+              <select [name]="campo.name" [(ngModel)]="modelo[campo.name]">
+                <option [ngValue]="null">Selecciona una opción…</option>
+                @for (referencia of referenciasPara(campo); track referencia.id) {
+                  <option [ngValue]="referencia.id">{{ campo.label(referencia) }}</option>
+                }
+              </select>
+            }
+            @default {
+              <input [name]="campo.name" 
+                     [type]="campo.type || 'text'" 
+                     [(ngModel)]="modelo[campo.name]" 
+                     [placeholder]="'Ingresa ' + etiqueta(campo.name).toLowerCase()">
+            }
+          }
+        </div>
+      }
+    </div>
+
+    <div class="form-actions-row">
+      <button type="submit" class="btn-crud-save">
+        {{ idEnEdicion ? 'Actualizar Cambios' : 'Registrar Nuevo' }}
+      </button>
+      @if (idEnEdicion) {
+        <button type="button" class="btn-crud-cancel" (click)="nuevo()">
+          Cancelar Edición
+        </button>
+      }
+    </div>
+  </form>
+
+  <!-- Table Card -->
+  <div class="crud-table-card">
+    <div class="table-card-top">
+      <h3>Listado Oficial</h3>
+      <input type="text" [(ngModel)]="filtroTexto" placeholder="Filtrar registros..." class="search-table-input">
+    </div>
+
+    <div class="table-responsive">
+      <table class="crud-data-table">
+        <thead>
+          <tr>
+            @for (columna of columnas; track columna) {
+              <th>{{ etiqueta(columna) }}</th>
+            }
+            <th class="actions-th">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (cargando) {
+            <tr>
+              <td [attr.colspan]="columnas.length + 1" class="empty-table-cell">
+                Cargando registros...
+              </td>
+            </tr>
+          } @else {
+            @for (fila of filasPaginadas; track fila.id) {
+              <tr [class.row-editing]="idEnEdicion === fila.id">
+                @for (columna of columnas; track columna) {
+                  <td>
+                    @if (columna === 'id') {
+                      <span class="id-badge">#{{ fila[columna] }}</span>
+                    } @else if (columna === 'estado' || columna === 'activo') {
+                      <span class="status-badge" [class.badge-active]="fila[columna] === 'ACTIVO' || fila[columna] === 1 || fila[columna] === 'PROGRAMADO'">
+                        {{ valor(fila[columna], columna) }}
+                      </span>
+                    } @else if (columna === 'rol') {
+                      <span class="role-badge">{{ opcion(fila[columna]) }}</span>
+                    } @else {
+                      {{ valor(fila[columna], columna) }}
+                    }
+                  </td>
+                }
+                <td class="actions-td">
+                  <button type="button" class="btn-row-edit" (click)="editar(fila)" title="Editar registro">Editar</button>
+                  <button type="button" class="btn-row-del" (click)="eliminar(fila)" title="Eliminar registro">Eliminar</button>
+                  @for (accion of configuracion.acciones; track accion.label) {
+                    <button type="button" class="btn-row-custom" (click)="accionPersonalizada(accion, fila)">
+                      {{ accion.label }}
+                    </button>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td [attr.colspan]="columnas.length + 1" class="empty-table-cell">
+                  No hay registros encontrados.
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination Controls Bar -->
+    <div class="crud-pagination-row">
+      <div class="pagination-info">
+        Mostrando {{ registroInicio }} - {{ registroFin }} de {{ filasFiltradas.length }} registros
+      </div>
+
+      <div class="pagination-controls">
+        <button type="button" 
+                class="btn-page-nav" 
+                [disabled]="paginaActual === 1" 
+                (click)="cambiarPagina(paginaActual - 1)" 
+                title="Página anterior">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          <span>Anterior</span>
+        </button>
+
+        <span class="pagination-badge">Página {{ paginaActual }} de {{ totalPaginas }}</span>
+
+        <button type="button" 
+                class="btn-page-nav" 
+                [disabled]="paginaActual >= totalPaginas" 
+                (click)="cambiarPagina(paginaActual + 1)" 
+                title="Página siguiente">
+          <span>Siguiente</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+
+      <div class="pagination-size">
+        <label>Ver:</label>
+        <select [(ngModel)]="tamanoPagina" (ngModelChange)="paginaActual = 1">
+          @for (tam of opcionesTamano; track tam) {
+            <option [ngValue]="tam">{{ tam }} / pág.</option>
+          }
+        </select>
+      </div>
+    </div>
+  </div>
+
+  @if (registroAEliminar) {
+    <div class="modal-backdrop-crud" (click)="cancelarEliminacion()">
+      <div class="modal-box-crud" (click)="$event.stopPropagation()">
+        <div class="modal-icon-danger">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            <line x1="10" y1="11" x2="10" y2="17"></line>
+            <line x1="14" y1="11" x2="14" y2="17"></line>
+          </svg>
+        </div>
+        <h3>¿Eliminar registro #{{ registroAEliminar.id }}?</h3>
+        <p>Esta acción quitará permanentemente este registro de la base de datos.</p>
+        <div class="modal-actions-crud">
+          <button type="button" class="btn-modal-cancel" (click)="cancelarEliminacion()" [disabled]="eliminando">
+            Cancelar
+          </button>
+          <button type="button" class="btn-modal-confirm-delete" (click)="ejecutarEliminar()" [disabled]="eliminando">
+            {{ eliminando ? 'Eliminando...' : 'Sí, Eliminar' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</section>

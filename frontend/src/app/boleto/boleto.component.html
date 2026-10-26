@@ -1,0 +1,92 @@
+<article class="luxury-ticket">
+  <div class="ticket-main">
+    <header class="ticket-top">
+      <div class="ticket-brand">
+        <span class="rp-tag">RP</span>
+        <div>
+          <b>Rutas del Perú</b>
+          <small>BOLETO ELECTRÓNICO DE VIAJE</small>
+        </div>
+      </div>
+      <div class="ticket-badge" [class.badge-paid]="boleto?.estado_pago === 'PAGADO'">
+        {{ boleto?.estado_pago || 'PAGADO' }}
+      </div>
+    </header>
+
+    <div class="ticket-route-banner">
+      <div class="route-point">
+        <small>ORIGEN</small>
+        <h3>{{ boleto?.origen || 'LIMA' }}</h3>
+        <span>{{ boleto?.fecha_salida }} · {{ boleto?.hora_salida }}</span>
+      </div>
+
+      <div class="route-arrow">
+        <span>⟶</span>
+        <small>{{ boleto?.tipo_servicio || 'CAMA 160°' }}</small>
+      </div>
+
+      <div class="route-point right-aligned">
+        <small>DESTINO</small>
+        <h3>{{ boleto?.destino || 'AYACUCHO' }}</h3>
+        <span>Llegada directa</span>
+      </div>
+    </div>
+
+    <div class="ticket-specs-grid">
+      <div class="spec-cell">
+        <small>PASAJERO</small>
+        <b>{{ boleto?.nombres }} {{ boleto?.apellidos }}</b>
+      </div>
+      <div class="spec-cell">
+        <small>DOCUMENTO</small>
+        <b>{{ boleto?.tipo_documento }} {{ boleto?.numero_documento }}</b>
+      </div>
+      <div class="spec-cell">
+        <small>BUS & ANDÉN</small>
+        <b>{{ boleto?.placa || 'A1B-950' }}</b>
+      </div>
+      <div class="spec-cell">
+        <small>TOTAL PAGADO</small>
+        <b class="price-highlight">S/ {{ formatearNumero(boleto?.precio_final) }}</b>
+      </div>
+    </div>
+
+    <div class="ticket-footer-info">
+      <span>Presenta este boleto digital en tu celular o impreso al abordar.</span>
+      <span>Boleto #{{ boleto?.id }} · {{ boleto?.fecha_emision }}</span>
+    </div>
+  </div>
+
+  <div class="ticket-notch"></div>
+
+  <div class="ticket-stub">
+    <div class="stub-header">
+      <small>TALÓN DE ABORDAJE</small>
+      <b>PASE OFICIAL</b>
+    </div>
+
+    <div class="stub-seat-display">
+      <span class="seat-badge-title">ASIENTO</span>
+      <span class="seat-number-big">#{{ boleto?.numero_asiento }}</span>
+      <small>Piso {{ boleto?.piso || 1 }} · {{ boleto?.ubicacion || 'VENTANA' }}</small>
+    </div>
+
+    <div class="stub-qr-section">
+      <div class="qr-box">
+        <svg class="qr-svg" viewBox="0 0 100 100">
+          <rect width="100" height="100" fill="#fff"/>
+          <path d="M10,10 h30 v30 h-30 z M15,15 v20 h20 v-20 z M22,22 h6 v6 h-6 z" fill="#0f172a"/>
+          <path d="M60,10 h30 v30 h-30 z M65,15 v20 h20 v-20 z M72,22 h6 v6 h-6 z" fill="#0f172a"/>
+          <path d="M10,60 h30 v30 h-30 z M15,65 v20 h20 v-20 z M22,72 h6 v6 h-6 z" fill="#0f172a"/>
+          <circle cx="50" cy="50" r="12" fill="#10b981"/>
+          <circle cx="50" cy="50" r="6" fill="#fff"/>
+        </svg>
+      </div>
+      <span class="qr-code-text">{{ boleto?.codigo_qr || 'RP-TICKET-' + boleto?.id }}</span>
+    </div>
+
+    <button type="button" class="btn-print" (click)="imprimir()">
+      Imprimir Comprobante
+    </button>
+  </div>
+</article>

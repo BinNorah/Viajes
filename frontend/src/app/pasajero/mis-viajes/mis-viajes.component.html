@@ -1,0 +1,113 @@
+<section class="mis-viajes-shell">
+  <header class="mis-viajes-header">
+    <div>
+      <span class="kicker">PORTAL DEL PASAJERO</span>
+      <h1 class="page-title">Mis Boletos y Viajes</h1>
+      <p class="page-desc">Consulta tus itinerarios programados, descarga tus boletos con código QR y revisa tu historial.</p>
+    </div>
+
+    @if (usuarioActual(); as usuario) {
+      <div class="user-summary-card">
+        <span class="user-avatar-circle">{{ usuario.nombre.charAt(0) }}</span>
+        <div>
+          <b>{{ usuario.nombre }}</b>
+          <small>DNI {{ usuario.dni }} · Pasajero frecuente</small>
+        </div>
+      </div>
+    }
+  </header>
+
+  <!-- Category Filter Tabs -->
+  <div class="filter-tabs-row">
+    <button type="button" 
+            class="tab-chip" 
+            [class.active]="tabActiva === 'proximos'" 
+            (click)="tabActiva = 'proximos'">
+      <span>Próximos Viajes</span>
+      <span class="count-pill">{{ viajesProximos.length }}</span>
+    </button>
+
+    <button type="button" 
+            class="tab-chip" 
+            [class.active]="tabActiva === 'pasados'" 
+            (click)="tabActiva = 'pasados'">
+      <span>Viajes Realizados</span>
+      <span class="count-pill">{{ viajesPasados.length }}</span>
+    </button>
+
+    <button type="button" 
+            class="tab-chip" 
+            [class.active]="tabActiva === 'anulados'" 
+            (click)="tabActiva = 'anulados'">
+      <span>Cancelados / Expirados</span>
+      <span class="count-pill">{{ boletosAnulados.length }}</span>
+    </button>
+  </div>
+
+  <!-- Tab 1: Próximos Viajes -->
+  @if (tabActiva === 'proximos') {
+    <div class="tickets-view">
+      @for (boleto of viajesProximos; track boleto.id) {
+        <div class="ticket-wrapper">
+          <div class="ticket-status-bar">
+            <span class="departure-countdown">Salida el {{ boleto.fecha_salida }} a las {{ boleto.hora_salida }} hrs</span>
+            <span class="boarding-badge">Confirmado para abordar</span>
+          </div>
+          <app-boleto [boleto]="boleto"></app-boleto>
+        </div>
+      } @empty {
+        <div class="empty-travels-card">
+          <span class="empty-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+            </svg>
+          </span>
+          <h3>No tienes viajes próximos programados</h3>
+          <p>Tu próximo destino te espera. Elige tu ruta y reserva con anticipación.</p>
+          <a routerLink="/pasajes" class="btn-book-travel">
+            Buscar Pasajes Disponibles →
+          </a>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Tab 2: Pasados -->
+  @if (tabActiva === 'pasados') {
+    <div class="tickets-view">
+      @for (boleto of viajesPasados; track boleto.id) {
+        <div class="ticket-wrapper past-ticket">
+          <div class="ticket-status-bar past-bar">
+            <span>Viaje completado · {{ boleto.fecha_salida }}</span>
+            <span>Finalizado</span>
+          </div>
+          <app-boleto [boleto]="boleto"></app-boleto>
+        </div>
+      } @empty {
+        <div class="empty-travels-card">
+          <h3>No hay viajes anteriores registrados</h3>
+          <p>Tu historial de viajes completados aparecerá aquí.</p>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Tab 3: Anulados -->
+  @if (tabActiva === 'anulados') {
+    <div class="tickets-view">
+      @for (boleto of boletosAnulados; track boleto.id) {
+        <div class="ticket-wrapper past-ticket">
+          <div class="ticket-status-bar cancel-bar">
+            <span>Boleto cancelado / anulado</span>
+          </div>
+          <app-boleto [boleto]="boleto"></app-boleto>
+        </div>
+      } @empty {
+        <div class="empty-travels-card">
+          <h3>No tienes boletos cancelados ni anulados</h3>
+        </div>
+      }
+    </div>
+  }
+</section>

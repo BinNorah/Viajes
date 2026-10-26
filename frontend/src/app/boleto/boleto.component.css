@@ -1,0 +1,268 @@
+.luxury-ticket {
+  display: grid;
+  grid-template-columns: 1fr auto 240px;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  position: relative;
+}
+
+.ticket-main {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.ticket-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.ticket-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rp-tag {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #10b981;
+  color: #fff;
+  font-weight: 900;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ticket-brand b {
+  display: block;
+  font-size: 15px;
+  color: #0f172a;
+}
+
+.ticket-brand small {
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.05em;
+}
+
+.ticket-badge {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.ticket-badge.badge-paid {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.ticket-route-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: #f8fafc;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.route-point small {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 0.05em;
+}
+
+.route-point h3 {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 2px 0;
+}
+
+.route-point span {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.right-aligned {
+  text-align: right;
+}
+
+.route-arrow {
+  text-align: center;
+  color: #94a3b8;
+}
+
+.route-arrow span {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.route-arrow small {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  color: #10b981;
+}
+
+.ticket-specs-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.spec-cell small {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+
+.spec-cell b {
+  font-size: 13px;
+  color: #0f172a;
+}
+
+.price-highlight {
+  color: #059669 !important;
+  font-size: 15px !important;
+}
+
+.ticket-footer-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #94a3b8;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 12px;
+}
+
+.ticket-notch {
+  width: 20px;
+  position: relative;
+  border-left: 2px dashed #cbd5e1;
+}
+
+.ticket-stub {
+  background: #f8fafc;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  text-align: center;
+}
+
+.stub-header small {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 0.05em;
+}
+
+.stub-header b {
+  font-size: 12px;
+  color: #0f172a;
+}
+
+.stub-seat-display {
+  margin: 12px 0;
+}
+
+.seat-badge-title {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  color: #64748b;
+  letter-spacing: 0.05em;
+}
+
+.seat-number-big {
+  display: block;
+  font-size: 32px;
+  font-weight: 900;
+  color: #065f46;
+  line-height: 1.1;
+}
+
+.stub-seat-display small {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.stub-qr-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.qr-box {
+  width: 86px;
+  height: 86px;
+  padding: 4px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin: 6px 0 4px;
+}
+
+.qr-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.qr-code-text {
+  font-family: monospace;
+  font-size: 8px;
+  color: #64748b;
+  word-break: break-all;
+}
+
+.btn-print {
+  margin-top: 10px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-print:hover {
+  background: #1e293b;
+}
+
+@media (max-width: 768px) {
+  .luxury-ticket {
+    grid-template-columns: 1fr;
+  }
+  .ticket-notch {
+    display: none;
+  }
+  .ticket-specs-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

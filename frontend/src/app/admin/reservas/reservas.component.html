@@ -1,0 +1,131 @@
+<section class="reservas-shell">
+  <header class="reservas-top-header">
+    <div>
+      <span class="kicker">CONTROL DE VENTAS Y PASAJEROS</span>
+      <h1 class="reservas-title">Gestión de Boletos y Reservas</h1>
+      <p class="reservas-desc">Seguimiento de compras en línea, ventas de taquilla física y estado de pagos.</p>
+    </div>
+    <button class="btn-refresh" (click)="actualizar()" [disabled]="cargando">
+      <span>{{ cargando ? 'Actualizando…' : '↻ Actualizar Datos' }}</span>
+    </button>
+  </header>
+
+  <!-- Stat Counters -->
+  <div class="stats-counters-grid">
+    <div class="counter-card" (click)="estadoFiltro = 'TODOS'">
+      <span class="counter-label">Total Registros</span>
+      <b class="counter-val">{{ reservas.length }}</b>
+      <small>Boletos y bloqueos</small>
+    </div>
+    <div class="counter-card card-paid" (click)="estadoFiltro = 'PAGADO'">
+      <span class="counter-label">Pagados / Confirmados</span>
+      <b class="counter-val">{{ totalPagados }}</b>
+      <small>Suma: S/ {{ totalRecaudado }}</small>
+    </div>
+    <div class="counter-card card-blocked" (click)="estadoFiltro = 'BLOQUEADO'">
+      <span class="counter-label">Bloqueos Temporales</span>
+      <b class="counter-val">{{ totalPendientes }}</b>
+      <small>En proceso de compra</small>
+    </div>
+    <div class="counter-card card-canceled" (click)="estadoFiltro = 'ANULADO'">
+      <span class="counter-label">Anulados / Expirados</span>
+      <b class="counter-val">{{ totalAnulados }}</b>
+      <small>Asientos liberados</small>
+    </div>
+  </div>
+
+  <!-- Filters & Search Toolbar -->
+  <div class="toolbar-box">
+    <div class="search-input-group">
+      <input [(ngModel)]="busquedaTexto" placeholder="Buscar por pasajero, DNI, código QR, ruta o vendedor…">
+    </div>
+
+    <div class="filter-group">
+      <label>Filtrar Estado:</label>
+      <select [(ngModel)]="estadoFiltro">
+        <option value="TODOS">Todos los estados</option>
+        <option value="PAGADO">Solo Pagados</option>
+        <option value="BLOQUEADO">Solo Bloqueos</option>
+        <option value="ANULADO">Solo Anulados</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Table Card -->
+  <div class="reservas-table-card">
+    @if (cargando) {
+      <div class="loading-state-box">
+        <div class="spinner"></div>
+        <p>Cargando información de boletos…</p>
+      </div>
+    } @else if (reservasFiltradas.length) {
+      <div class="table-responsive">
+        <table class="reservas-data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Boleto / QR</th>
+              <th>Pasajero</th>
+              <th>Ruta</th>
+              <th>Salida</th>
+              <th>Asiento</th>
+              <th>Monto</th>
+              <th>Canal / Vendedor</th>
+              <th>Estado</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (reserva of reservasFiltradas; track reserva.id) {
+              <tr>
+                <td><b>#{{ reserva.id }}</b></td>
+                <td><span class="qr-cell">{{ reserva.codigo_qr || '—' }}</span></td>
+                <td>
+                  <b>{{ reserva.nombres }} {{ reserva.apellidos }}</b>
+                  <small class="doc-sub">{{ reserva.tipo_documento }} {{ reserva.numero_documento }}</small>
+                </td>
+                <td>{{ reserva.origen }} ⟶ {{ reserva.destino }}</td>
+                <td>{{ reserva.fecha_salida }} {{ reserva.hora_salida }}</td>
+                <td><span class="seat-badge">#{{ reserva.numero_asiento }} (P{{ reserva.piso }})</span></td>
+                <td><b>S/ {{ formatearPrecio(reserva.precio_final) }}</b></td>
+                <td>
+                  <span class="canal-badge">{{ reserva.canal || 'ONLINE' }}</span>
+                  <small class="seller-sub">{{ reserva.vendedor || 'Web' }}</small>
+                </td>
+                <td>
+                  <span class="status-pill status-{{ reserva.estado_pago.toLowerCase() }}">
+                    {{ estadoTexto(reserva.estado_pago) }}
+                  </span>
+                </td>
+                <td>
+                  <button type="button" class="btn-view-ticket" (click)="verBoleto(reserva)">
+                    Ver Boleto
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <div class="empty-state-box">
+        <p>No se encontraron reservas con los filtros aplicados.</p>
+      </div>
+    }
+  </div>
+
+  <!-- Ticket Modal -->
+  @if (boletoSeleccionado) {
+    <div class="modal-backdrop" (click)="boletoSeleccionado = null">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-head">
+          <h3>Boleto Digital Oficial #{{ boletoSeleccionado.id }}</h3>
+          <button class="btn-close" (click)="boletoSeleccionado = null">Cerrar</button>
+        </div>
+        <div class="modal-content">
+          <app-boleto [boleto]="boletoSeleccionado"></app-boleto>
+        </div>
+      </div>
+    </div>
+  }
+</section>

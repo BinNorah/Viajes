@@ -1,0 +1,156 @@
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <!-- Showcase Lateral -->
+    <aside class="auth-showcase">
+      <div class="showcase-content">
+        <a class="auth-brand" routerLink="/">
+          <span class="auth-brand-mark">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M8 6v6"></path><path d="M15 6v6"></path><path d="M2 12h19.6"></path>
+              <circle cx="6" cy="18" r="2"></circle><circle cx="17" cy="18" r="2"></circle>
+            </svg>
+          </span>
+          <div>
+            <strong>Rutas del Perú</strong>
+            <small>TRANSPORTE INTERPROVINCIAL</small>
+          </div>
+        </a>
+
+        <div class="showcase-hero">
+          <span class="badge-pill">SISTEMA INTEGRAL DE VIAJES</span>
+          <h1>Tu destino comienza <em>aquí.</em></h1>
+          <p>Gestiona tus boletos, monitorea rutas en tiempo real o administra la flota completa desde un solo lugar.</p>
+        </div>
+
+        <div class="showcase-features">
+          <div class="feat-item">
+            <div class="feat-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+              </svg>
+            </div>
+            <div>
+              <strong>Emisión Instantánea</strong>
+              <small>Boletos electrónicos con código QR y validación digital</small>
+            </div>
+          </div>
+          <div class="feat-item">
+            <div class="feat-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+            </div>
+            <div>
+              <strong>Seguridad Garantizada</strong>
+              <small>Bloqueo de asientos atómico y autenticación por roles</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Form Section -->
+    <main class="auth-form-section">
+      <!-- Mode Toggle -->
+      <div class="mode-toggle">
+        <button type="button" 
+                class="mode-btn" 
+                [class.active]="modo === 'login'" 
+                (click)="cambiarModo('login')">
+          Iniciar Sesión
+        </button>
+        <button type="button" 
+                class="mode-btn" 
+                [class.active]="modo === 'registro'" 
+                (click)="cambiarModo('registro')">
+          Crear Cuenta
+        </button>
+      </div>
+
+      <!-- Quick Demo Accounts -->
+      @if (modo === 'login') {
+        <div class="demo-accounts-box">
+          <span class="demo-title">Acceso rápido con cuentas de prueba:</span>
+          <div class="demo-chips">
+            <button type="button" class="chip-btn" (click)="cargarDemo('admin')">Admin</button>
+            <button type="button" class="chip-btn" (click)="cargarDemo('taquilla')">Taquilla</button>
+            <button type="button" class="chip-btn" (click)="cargarDemo('chofer')">Chofer</button>
+            <button type="button" class="chip-btn" (click)="cargarDemo('cliente')">Pasajero</button>
+          </div>
+        </div>
+      }
+
+      <!-- Form -->
+      <div class="form-container">
+        @if (modo === 'login') {
+          <header class="form-header">
+            <h2>Bienvenido de vuelta</h2>
+            <p>Ingresa tus credenciales para acceder a tus reservas y servicios.</p>
+          </header>
+
+          <form (ngSubmit)="entrar()" class="auth-fields">
+            <div class="form-group">
+              <label for="login-email">Correo Electrónico</label>
+              <input id="login-email" type="email" [(ngModel)]="correo" name="correo" placeholder="correo@ejemplo.com" required autocomplete="email">
+            </div>
+
+            <div class="form-group">
+              <div class="label-row">
+                <label for="login-pass">Contraseña</label>
+                <button type="button" class="btn-link" (click)="ayudaPassword()">¿Olvidaste tu clave?</button>
+              </div>
+              <input id="login-pass" [type]="verPassword ? 'text' : 'password'" [(ngModel)]="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+            </div>
+
+            <button type="submit" class="btn-auth-submit" [disabled]="ingresando">
+              {{ ingresando ? 'Ingresando…' : 'Iniciar Sesión' }}
+            </button>
+          </form>
+        } @else {
+          <header class="form-header">
+            <h2>Crea tu cuenta de pasajero</h2>
+            <p>Compra pasajes más rápido y accede a tu historial de viajes.</p>
+          </header>
+
+          <form (ngSubmit)="registrar()" class="auth-fields">
+            <div class="fields-row">
+              <div class="form-group">
+                <label>DNI (8 dígitos) *</label>
+                <input type="text" [(ngModel)]="registroForm.dni" name="dni" placeholder="72345678" maxlength="8" required>
+              </div>
+              <div class="form-group">
+                <label>Teléfono *</label>
+                <input type="tel" [(ngModel)]="registroForm.telefono" name="telefono" placeholder="987654321">
+              </div>
+            </div>
+
+            <div class="fields-row">
+              <div class="form-group">
+                <label>Nombres *</label>
+                <input type="text" [(ngModel)]="registroForm.nombres" name="nombres" placeholder="Juan" required>
+              </div>
+              <div class="form-group">
+                <label>Apellidos *</label>
+                <input type="text" [(ngModel)]="registroForm.apellidos" name="apellidos" placeholder="Pérez" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Correo Electrónico *</label>
+              <input type="email" [(ngModel)]="registroForm.correo" name="correo" placeholder="juan@ejemplo.com" required>
+            </div>
+
+            <div class="form-group">
+              <label>Contraseña *</label>
+              <input type="password" [(ngModel)]="registroForm.password" name="password" placeholder="Mínimo 6 caracteres" required>
+            </div>
+
+            <button type="submit" class="btn-auth-submit" [disabled]="registrando">
+              {{ registrando ? 'Creando cuenta…' : 'Crear Cuenta y Continuar' }}
+            </button>
+          </form>
+        }
+      </div>
+    </main>
+  </div>
+</div>
